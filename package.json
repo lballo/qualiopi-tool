@@ -1,0 +1,7 @@
+{
+  "name": "gestion-qualiopi",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Panel de gestion Qualiopi — Laura Ballo Coaching",
+  "engines": { "node": ">=18" }
+}
