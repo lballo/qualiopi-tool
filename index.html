@@ -10,7 +10,7 @@
 <style>
 :root{
   --green:#3E9C7A; --green-d:#2F7A5F; --green-l:#EAF5F0; --green-ink:#1F5E48;
-  --ink:#111827; --ink-2:#374151; --muted:#6B7280; --muted-2:#9CA3AF;
+  --ink:#111827; --ink-2:#374151; --muted:#6B7280; --muted-2:#6E7681;
   --line:#E5E7EB; --line-2:#F3F4F6; --bg:#F7F8FA; --white:#fff;
   --amber:#B45309; --amber-bg:#FEF3C7; --red:#B91C1C; --red-bg:#FEE2E2;
   --blue:#1D4ED8; --blue-bg:#DBEAFE; --violet:#6D28D9; --violet-bg:#EDE9FE;
@@ -33,11 +33,11 @@ svg{flex-shrink:0}
 .side{width:236px;flex-shrink:0;background:var(--white);border-right:1px solid var(--line);padding:16px 12px;position:sticky;top:0;height:100vh;overflow-y:auto;display:flex;flex-direction:column}
 .logo{display:flex;align-items:center;gap:9px;padding:6px 8px 18px;font-weight:700;font-size:15px}
 .logo svg{width:22px;height:22px;color:var(--green)}
-.navsec{font-size:10.5px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--muted-2);padding:15px 8px 6px}
+.navsec{font-size:11.5px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--muted-2);padding:15px 8px 6px}
 .nav{display:flex;align-items:center;gap:10px;width:100%;text-align:left;padding:8px 10px;border-radius:8px;font-size:13.5px;font-weight:500;color:var(--ink-2);transition:.15s}
 .nav svg{width:19px;height:19px;opacity:.85}
 .nav:hover{background:var(--line-2)}
-.nav.on{background:var(--green);color:#fff;font-weight:600}
+.nav.on{background:var(--green-d);color:#fff;font-weight:600}
 .nav.on svg{opacity:1}
 .nav .cnt{margin-left:auto;font-size:11.5px;color:var(--muted-2)}
 .nav.on .cnt{color:rgba(255,255,255,.75)}
@@ -62,8 +62,8 @@ svg{flex-shrink:0}
 .ph .sp{margin-left:auto;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 
 .btn{border-radius:9px;padding:9px 15px;font-size:13.5px;font-weight:600;display:inline-flex;align-items:center;gap:7px;transition:.15s}
-.btn.pri{background:var(--green);color:#fff}
-.btn.pri:hover{background:var(--green-d)}
+.btn.pri{background:var(--green-d);color:#fff}
+.btn.pri:hover{background:var(--green-ink)}
 .btn.sec{background:var(--white);border:1px solid var(--line);color:var(--ink-2)}
 .btn.sec:hover{border-color:var(--muted-2)}
 .btn.sm{padding:6px 11px;font-size:12.5px}
@@ -77,7 +77,7 @@ svg{flex-shrink:0}
 .chead{display:flex;align-items:flex-start;gap:12px;margin-bottom:16px;flex-wrap:wrap}
 .chead .sp{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap}
 
-.ind{display:inline-flex;align-items:center;border:1px solid var(--line);border-radius:6px;padding:1px 6px;font-size:10.5px;font-weight:600;color:var(--muted);background:var(--white)}
+.ind{display:inline-flex;align-items:center;border:1px solid var(--line);border-radius:6px;padding:1px 6px;font-size:11.5px;font-weight:600;color:var(--muted);background:var(--white)}
 .tag{font-size:11.5px;font-weight:600;border-radius:20px;padding:3px 9px;display:inline-block;white-space:nowrap}
 .tag.ok{background:var(--green-l);color:var(--green-ink)}
 .tag.warn{background:var(--amber-bg);color:var(--amber)}
@@ -112,7 +112,12 @@ button.tag:hover{filter:brightness(.96)}
 .kpi .v small{font-size:14px;color:var(--muted-2);font-weight:500}
 .kpi .l{font-size:12.5px;color:var(--muted);margin-top:1px}
 
+/* Un tableau plus large que son conteneur doit défiler dans sa propre boîte,
+   sinon les dernières colonnes deviennent inatteignables sous 940 px. */
+.tw{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.tw:focus-visible{outline:2px solid var(--green-d);outline-offset:-2px}
 table{width:100%;border-collapse:collapse}
+.chev{color:var(--muted-2);font-size:16px;padding-left:8px}
 th{text-align:left;font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted-2);padding:11px 16px;background:#FAFBFC;border-bottom:1px solid var(--line)}
 td{padding:13px 16px;border-bottom:1px solid var(--line-2);font-size:13.5px;vertical-align:middle}
 tr:last-child td{border-bottom:none}
@@ -226,16 +231,16 @@ align-items:center;justify-content:center;font-size:11px;font-weight:700;cursor:
 .alert li{font-size:13px;color:#B91C1C;margin-bottom:2px}
 .mini-sel{padding:5px 9px;font-size:12.5px;border-radius:7px}
 .up.depot{transition:border-color .15s,background .15s}
-.up.depot.survol{border-color:var(--vert);background:#F0FAF6}
-.up.depot.survol .t{color:var(--vert-d)}
+.up.depot.survol{border-color:var(--green);background:#F0FAF6}
+.up.depot.survol .t{color:var(--green-d)}
 .pickrow{display:flex;align-items:center;gap:12px;padding:11px 4px;border-top:1px solid var(--line-2);cursor:pointer;transition:background .12s}
-.pickrow:hover{background:var(--bg-2)}
+.pickrow:hover{background:var(--line-2)}
 .pickrow.on{background:#F0FAF6}
 .pickrow .box{width:19px;height:19px;border:1.6px solid var(--line);border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:12px;color:#fff;flex:none}
-.pickrow.on .box{background:var(--vert);border-color:var(--vert)}
+.pickrow.on .box{background:var(--green-d);border-color:var(--green-d)}
 .pickrow .pi{flex:1;min-width:150px;font-size:13.5px}
 .pickrow .pi .s{display:block;font-size:12px;color:var(--muted)}
-.selbar{display:flex;align-items:center;gap:10px;padding:9px 12px;background:#F0FAF6;border:1px solid #CDEBDF;border-radius:8px;font-size:13px;color:var(--vert-d);margin-bottom:6px}
+.selbar{display:flex;align-items:center;gap:10px;padding:9px 12px;background:#F0FAF6;border:1px solid #CDEBDF;border-radius:8px;font-size:13px;color:var(--green-ink);margin-bottom:6px}
 .persrow{display:flex;align-items:center;gap:12px;flex-wrap:wrap;border-top:1px solid var(--line-2);padding:12px 2px}
 .persrow:first-of-type{border-top:none}
 .persrow .pi{flex:1;min-width:200px;font-size:13.5px}
@@ -289,9 +294,28 @@ background:var(--line-2);border-radius:7px;padding:6px 9px;word-break:break-all}
 padding:11px 18px;border-radius:10px;font-size:13.5px;font-weight:500;opacity:0;pointer-events:none;transition:.25s;z-index:99;box-shadow:0 8px 24px rgba(0,0,0,.18)}
 #toast.on{opacity:1;transform:translateX(-50%)}
 
+/* Impression — un rapport de conformité présentable le jour de l'audit.
+   On imprime l'écran courant, sans les commandes ni la navigation. */
+@media print{
+  @page{margin:14mm}
+  .mockbar,.side,.login,#toast,.drawer,.btn,.chev,.tools,.acts{display:none!important}
+  .tab:not(.on){display:none!important}
+  .tabs{border:none;padding:0;background:none}
+  .shell{display:block!important}
+  .main{padding:0}
+  body{background:#fff;color:#000;font-size:10.5pt}
+  .card,.conf,.kpi,.alert{break-inside:avoid;box-shadow:none;border-color:#999}
+  .todo,.g,.echrow,.docrow,.persrow,tr{break-inside:avoid}
+  thead{display:table-header-group}
+  .tw{overflow:visible}
+  .view{animation:none}
+  a[href^="http"]:after{content:" (" attr(href) ")";font-size:8.5pt;color:#555;word-break:break-all}
+}
+
 @media(max-width:940px){
   .shell{flex-direction:column}
-  .side{width:auto;height:auto;position:static;flex-direction:row;overflow-x:auto;padding:10px;gap:5px}
+  .side{width:auto;height:auto;position:static;flex-direction:row;overflow-x:auto;
+    -webkit-overflow-scrolling:touch;scroll-behavior:smooth;padding:10px;gap:5px}
   .logo,.navsec,.side .foot{display:none}
   .nav{width:auto;white-space:nowrap}
   .main{padding:16px 14px 46px}
@@ -312,7 +336,7 @@ padding:11px 18px;border-radius:10px;font-size:13.5px;font-weight:500;opacity:0;
     <div class="logo" style="justify-content:center;padding-bottom:14px"></div>
     <div class="ct" style="justify-content:center">Espace de gestion</div>
     <div class="cd" style="text-align:center;margin-bottom:16px">Panel Qualiopi — Laura Ballo</div>
-    <div class="fld"><label>Clé d'accès</label><input type="password" id="cle" autocomplete="current-password"></div>
+    <div class="fld"><label for="cle">Clé d'accès</label><input type="password" id="cle" autocomplete="current-password"></div>
     <button class="btn pri" style="width:100%;justify-content:center" onclick="connexion()">Se connecter</button>
     <div class="note" id="loginErr" style="margin-top:10px;color:var(--red);display:none"></div>
   </div>
@@ -374,7 +398,7 @@ function mkF(o){const f=Object.assign({
   technique:{locaux:"",locauxPar:[],equip:"",equipPar:[]},
   sanction:"Attestation de fin de formation mentionnant les objectifs, la nature, la durée de l'action et les résultats de l'évaluation des acquis.",
   evalModalites:"",contenu:"",files:{programme:null,deroulePdf:null,supportPart:null,supportForm:null},ressources:[],
-  evalDesc:"",formateurs:["t1"],maj:"2026-07-06"},o);
+  evalDesc:"",formateurs:["t1"],maj:new Date().toLocaleDateString("sv-SE")},o);
   if(!f.files) f.files={programme:null,deroulePdf:null,supportPart:null,supportForm:null};
   if(!f.ressources) f.ressources=[];
   Object.defineProperty(f,"programme",{get(){return !!f.files.programme;},
@@ -428,88 +452,6 @@ const SOURCES_AM=["Satisfaction à chaud","Évaluation à froid","Réclamation �
 const TYPES_SUIVI=["Formation suivie","Certification obtenue","Entretien professionnel","Autoformation / veille","Retour de stagiaires","Supervision / co-animation"];
 const MISE_DISPO=["Le prestataire","Le client","Le sous-traitant","Les bénéficiaires"];
 
-/* ═══════════════ DONNÉES INITIALES (issues de votre Notion) ═══════════════ */
-const seed = () => ({
-  formations:[
-    mkF({id:"f1",nom:"Les bases de l'intelligence artificielle",code:"IA-01",duree:14,jours:2,tarif:2400,tarifInter:590,
-      supports:2,categorie:"ia",tags:["IA & automation","Culture"],statutPub:"Publié",slug:"bases-intelligence-artificielle",
-      accroche:"Comprendre l'IA générative et l'utiliser au quotidien",
-      objectif:"À l'issue de la formation, le stagiaire sera capable d'utiliser un assistant IA de manière pertinente et sécurisée dans son activité professionnelle.",
-      objectifsOp:"1. Identifier les usages pertinents de l'IA dans son métier\n2. Rédiger des consignes efficaces\n3. Vérifier et sécuriser les productions",
-      publicCible:"Toute personne souhaitant intégrer l'IA dans sa pratique professionnelle.",
-      prerequis:"Aucun prérequis technique. Maîtrise de la navigation web.",
-      contenu:"Jour 1 — Comprendre l'IA générative et ses limites\nJour 2 — Cas pratiques par métier et cadre de confiance"}),
-    mkF({id:"f2",nom:"Développer l'IA dans sa pratique professionnelle",code:"IA-02",duree:14,jours:2,tarif:2400,categorie:"ia",tags:["IA & automation"],statutPub:"Publié",slug:"developper-ia-pratique-professionnelle"}),
-    mkF({id:"f3",nom:"Conduire le changement à l'ère de l'IA",code:"CC-01",duree:14,jours:2,tarif:2400,categorie:"transformation",tags:["Gestion du changement","IA & automation"],statutPub:"Publié",slug:"conduire-changement-ere-ia"}),
-    mkF({id:"f4",nom:"Management augmenté : intelligence émotionnelle et IA",code:"MA-01",duree:14,jours:2,tarif:2400,categorie:"management",tags:["Management","Intelligence émotionnelle"],statutPub:"Publié",slug:"management-augmente"}),
-    mkF({id:"f5",nom:"Intelligence émotionnelle",code:"IE-01",duree:14,jours:2,tarif:2400,categorie:"communication",tags:["Intelligence émotionnelle","Développement personnel"],statutPub:"Publié",slug:"intelligence-emotionnelle"}),
-    mkF({id:"f6",nom:"Gestion des conflits et des situations complexes",code:"GC-01",duree:14,jours:2,tarif:2400,categorie:"communication",tags:["Gestion des conflits","Communication"],statutPub:"Publié",slug:"gestion-conflits-situations-complexes"}),
-    mkF({id:"f7",nom:"Prise de parole & Média training",code:"PPM-01",duree:14,jours:2,tarif:2600,categorie:"prise-de-parole",tags:["Prise de parole en public","Média training"],statutPub:"Publié",slug:"prise-de-parole-media-training"})],
-  clients:[
-    mkC({id:"c1",nom:"5Pstar",type:"Entreprise",statut:"Client"}),
-    mkC({id:"c2",nom:"CGRM",type:"Entreprise",statut:"Client",ville:"Dunkerque",cp:"59640",
-      adresse:"377 rue du Luxembourg",secteur:"Santé & Bien-être",
-      cadrage:"Mutuelle de 120 salariés, service relation adhérents en tension depuis la réforme.",
-      contacts:[{id:"p1",civilite:"Madame",prenom:"Céline",nom:"MOREL",fonction:"Responsable formation",
-        email:"c.morel@cgrm.fr",tel:"03 28 00 00 00",linkedin:"",principal:true,repLegal:false},
-        {id:"p2",civilite:"Monsieur",prenom:"Paul",nom:"DUCHESNE",fonction:"Directeur général",
-        email:"direction@cgrm.fr",tel:"",linkedin:"",principal:false,repLegal:true}],
-      docs:[{id:"d1",titre:"Convention formation appels difficiles",type:"Convention de formation",statut:"Signé",
-        envoi:"2026-06-20",signature:"2026-06-25",montant:2400,fichier:"convention-cgrm.pdf",signataire:"Directrice des opérations"}],
-      echanges:[{id:"e1",date:"2026-06-12",type:"Réunion",titre:"Cadrage du besoin",cr:"Analyse des situations rencontrées par les conseillers.",suite:"Envoi du devis"},
-        {id:"e2",date:"2026-06-20",type:"Email",titre:"Envoi du devis et de la convention",cr:"",suite:"Relance à J+7"}]}),
-    mkC({id:"c3",nom:"Institut François Bocquet",type:"Organisme partenaire",statut:"Client fidèle",
-      siret:"383 199 288 00036",email:"infos@performances.fr",ville:"Fontaine-le-Port",cp:"77590",
-      adresse:"4 rue de la Coudre",formeJuridique:"SARL"})],
-  formateurs:[
-    mkT({id:"t1",nom:"BALLO",prenom:"Laura",fonction:"Dirigeante, formatrice, coach",statut:"Indépendant",type:"Interne",
-      email:"contact@lauraballo.com",tel:"06 43 03 79 26",cv:true,dip:true,rc:true,nda:true,
-      refPeda:true,refHandicap:true,formations:["f1","f2","f3","f4","f5","f6","f7"],
-      suivis:[{id:"sv1",date:"2026-03-12",type:"Formation suivie",titre:"Prompt engineering avancé",organisme:"OpenClassrooms",duree:14,
-        competences:"IA générative appliquée à la pédagogie",suites:"Mise à jour des ateliers de la formation IA-01",preuve:"attestation-prompt.pdf"}]}),
-    mkT({id:"t2",nom:"Amandine",prenom:"",fonction:"Assistante administrative",statut:"Salarié",type:"Interne",
-      email:"",tel:"",refAdmin:true,formations:[]})],
-  financeurs:[
-    mkFi({id:"fi1",nom:"OPCO Atlas",type:"OPCO",email:"contact@opco-atlas.fr",tel:"01 23 45 67 89",
-      site:"https://www.opco-atlas.fr",portail:"https://myatlas.opco-atlas.fr",
-      contact:"Service prise en charge",numero:"ADH-2026-0412",delai:15,
-      conditions:"Dépôt de la demande au moins 15 jours avant le démarrage. Pièces exigées : programme, convention, devis, attestation Qualiopi.",
-      docs:[{id:"fd1",titre:"Convention-cadre 2026",fichier:"convention-cadre-atlas.pdf",date:"2026-01-15"}]})],
-  apprenants:[
-    {id:"a1",nom:"COTILLARD",prenom:"Marion",email:"marion@cgrm.fr",tel:"",entreprise:"CGRM",fonction:"Téléconseillère",adaptation:false,besoin:"",mesures:"",mode:"Entreprise (intra)",financement:"Employeur / fonds propres",financeurId:"",montant:null,attestation:false,froid:false},
-    {id:"a2",nom:"ANTIER",prenom:"Elisabeth",email:"e.antier@cgrm.fr",tel:"",entreprise:"CGRM",fonction:"Superviseuse",adaptation:false,besoin:"",mesures:"",mode:"Entreprise (intra)",financement:"Employeur / fonds propres",financeurId:"",montant:null,attestation:false,froid:false},
-    {id:"a3",nom:"DUPRÉ",prenom:"Christophe",email:"christophe@cgrm.fr",tel:"",entreprise:"CGRM",fonction:"Conseiller",adaptation:true},
-    {id:"a4",nom:"Prince",prenom:"",email:"prince@5pstar.fr",tel:"",entreprise:"5Pstar",fonction:"",adaptation:false,besoin:"",mesures:"",mode:"Entreprise (intra)",financement:"Employeur / fonds propres",financeurId:"",montant:null,attestation:false,froid:false},
-    {id:"a5",nom:"Lideya",prenom:"",email:"lideya@5pstar.fr",tel:"",entreprise:"5Pstar",fonction:"",adaptation:false,besoin:"",mesures:"",mode:"Entreprise (intra)",financement:"Employeur / fonds propres",financeurId:"",montant:null,attestation:false,froid:false}],
-  sessions:[
-    {id:"s1",titre:"5star IA session 2",formationId:"f1",clientId:"c1",formateurId:"t1",type:"INTRA",code:"3",lieu:"",
-     modalites:["Présentiel"],statut:"Planifiée",convention:false,convocation:false,
-     rapport:{fait:false,deroule:"",forts:"",diff:"",axes:""},besoin:{contexte:"",objectifs:"",contraintes:""},
-     creneaux:[{date:"2026-08-30",type:"Matin",d:"09:00",f:"12:30"},{date:"2026-08-30",type:"Après-midi",d:"13:30",f:"17:00"},
-               {date:"2026-08-31",type:"Matin",d:"09:00",f:"12:30"},{date:"2026-08-31",type:"Après-midi",d:"13:30",f:"17:00"}],
-     inscrits:[{aId:"a4",pos:false,ev:0.2,sat:true,em:[false,false,false,false],convoc:false,convocDate:null,adaptation:false,besoin:"",mesures:"",mode:"Entreprise (intra)",financement:"Employeur / fonds propres",financeurId:"",montant:null,attestation:false,froid:false},
-               {aId:"a5",pos:false,ev:null,sat:true,em:[false,false,false,false],convoc:false,convocDate:null,adaptation:false,besoin:"",mesures:"",mode:"Entreprise (intra)",financement:"Employeur / fonds propres",financeurId:"",montant:null,attestation:false,froid:false}],
-     emF:[false,false,false,false]},
-    {id:"s2",titre:"5Pstar IA",formationId:"f1",clientId:"c1",formateurId:"t1",type:"INTRA",code:"33",lieu:"",
-     modalites:["Présentiel"],statut:"Terminée",convention:false,convocation:true,
-     rapport:{fait:false,deroule:"",forts:"",diff:"",axes:""},besoin:{contexte:"",objectifs:"",contraintes:""},
-     creneaux:[{date:"2026-07-09",type:"Matin",d:"09:00",f:"12:30"},{date:"2026-07-09",type:"Après-midi",d:"13:30",f:"17:00"}],
-     inscrits:[{aId:"a1",pos:true,ev:0.62,sat:true,em:[true,true],convoc:true,convocDate:"2026-06-25",adaptation:false,besoin:"",mesures:"",mode:"Entreprise (intra)",financement:"Employeur / fonds propres",financeurId:"",montant:null,attestation:false,froid:false},{aId:"a2",pos:true,ev:0.65,sat:true,em:[true,true],convoc:true,convocDate:"2026-06-25",adaptation:false,besoin:"",mesures:"",mode:"Entreprise (intra)",financement:"Employeur / fonds propres",financeurId:"",montant:null,attestation:false,froid:false}],
-     emF:[true,true]}],
-  veilles:[],
-  org:{nom:"Laura Ballo Coaching",forme:"",siret:"",siren:"",nda:"",ndaPrefet:"",ape:"",capital:null,
-    tva:"",rcs:"",email:"contact@lauraballo.com",tel:"",adresse:"",cp:"",ville:"",region:"",
-    site:"lauraballo.com",repNom:"Laura Ballo",repQualite:"Dirigeante",
-    qualiopi:false,qualiopiDate:"",modalitesAcces:"",delaisAcces:"",implication:"",secteurs:"",
-    validiteDevis:30,delaiConvoc:15,juridiction:"",
-    docs:{ri:"Reglement-interieur-2026.pdf",cgv:null,certif:null,logo:null},autres:[]},
-  ameliorations:[
-    {id:"am1",date:"2026-07-12",type:"Suggestion",objet:"Ajouter des mises en situation filmées",
-     situation:"Plusieurs stagiaires souhaitent se revoir en action lors des ateliers de prise de parole.",
-     impact:"Mineur",statut:"En cours",signalePar:"Stagiaire",parties:"Groupe PPM juillet",
-     action:"Intégrer un temps de visionnage au J2 et fournir la vidéo à chacun.",echeance:"2026-09-30",source:"Satisfaction à chaud"}],
-  abandons:[],
-});
 let db = {formations:[],clients:[],formateurs:[],financeurs:[],apprenants:[],sessions:[],
   veilles:[],ameliorations:[],abandons:[],modeles:[],org:{nom:"",forme:"",siret:"",siren:"",nda:"",ndaPrefet:"",ape:"",capital:null,
   tva:"",rcs:"",email:"",tel:"",adresse:"",cp:"",ville:"",region:"",site:"",repNom:"",repQualite:"",
@@ -565,6 +507,7 @@ async function connexion(){
     try{ sessionStorage.setItem("cleGestion",v); }catch(e){}
     document.getElementById("login").style.display="none";
     document.querySelector(".shell").classList.add("pret");
+    const r=routeDeHash(); if(r) route=r;
     render();
   }catch(e){ err.textContent=e.message; err.style.display="block"; CLE=""; }
 }
@@ -578,7 +521,16 @@ let draft = null;   // état des formulaires en cours
 /* ═══════════════ OUTILS ═══════════════ */
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 const uid=p=>p+Math.random().toString(36).slice(2,7);
+/* Première date proposée pour une nouvelle session : le délai d'accès par défaut. */
+const dateProchaine=()=>{const d=new Date();d.setDate(d.getDate()+15);
+  return d.toLocaleDateString("sv-SE");};
 const esc=s=>String(s??"").replace(/[<>&]/g,c=>({"<":"&lt;",">":"&gt;","&":"&amp;"}[c]));
+/* Date du jour au format ISO, en heure locale. Une constante figée fausse
+   le classement « sessions passées / à venir » et les dates par défaut. */
+const AUJ=()=>new Date().toLocaleDateString("sv-SE");
+const dateLongue=()=>{const d=new Date().toLocaleDateString("fr-FR",
+  {weekday:"long",day:"numeric",month:"long",year:"numeric"});
+  return d.charAt(0).toUpperCase()+d.slice(1);};
 const fmtD=iso=>iso?new Date(iso+"T12:00:00").toLocaleDateString("fr-FR",{day:"numeric",month:"long",year:"numeric"}):"—";
 const fmtDShort=iso=>iso?new Date(iso+"T12:00:00").toLocaleDateString("fr-FR",{day:"2-digit",month:"2-digit",year:"numeric"}):"—";
 const mn=t=>{const[h,m]=(t||"0:0").split(":").map(Number);return h*60+m;};
@@ -627,35 +579,42 @@ async function televerser(fichier,pageId,propriete,apres){
   }catch(e){ toast("⚠ Envoi refusé : "+e.message); }
 }
 function toast(m){const t=$("#toast");t.textContent=m;t.classList.add("on");clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove("on"),2600);}
-function resetAll(){if(confirm("Revenir aux données de départ ?")){db=seed();draft=null;go("dash");toast("Maquette réinitialisée");}}
 
 /* ═══════════════ CONFORMITÉ (calculée) ═══════════════ */
 function conformite(){
   const pts=[];
-  const add=(lbl,ok,ind,view)=>pts.push({lbl,ok,ind,view});
-  add("Programmes PDF déposés sur le catalogue", db.formations.every(f=>f.programme),"IND 1","formations");
-  add("Supports pédagogiques disponibles", db.formations.filter(f=>f.supports>0).length>=3,"IND 6","formations");
-  add("Veille légale alimentée", db.veilles.some(v=>v.theme==="legale"),"IND 23","veille");
-  add("Veille métiers alimentée", db.veilles.some(v=>v.theme==="metiers"),"IND 24","veille");
-  add("Veille pédagogique alimentée", db.veilles.some(v=>v.theme==="pedago"),"IND 25","veille");
-  add("Veilles exploitées (actions décrites)", db.veilles.some(v=>v.exploitation?.trim()),"IND 23-25","veille");
-  add("Conventions déposées", db.sessions.length>0 && db.sessions.every(s=>s.convention),"IND 9","sessions");
-  add("Convocations envoyées", db.sessions.length>0 && db.sessions.every(s=>s.convocation),"IND 9","sessions");
+  /* `cat` rattache explicitement chaque point à une jauge. L'ancien regroupement
+     déduisait la catégorie du libellé d'indicateur : « IND 30-32 » ne contenant
+     ni « IND 9 » ni « IND 32 », l'amélioration continue n'entrait dans aucune
+     jauge et le total affiché ne correspondait plus à la somme des jauges. */
+  const add=(lbl,ok,ind,view,cat)=>pts.push({lbl,ok,ind,view,cat});
+  add("Programmes PDF déposés sur le catalogue", db.formations.every(f=>f.programme),"IND 1","formations","Catalogue");
+  add("Supports pédagogiques disponibles", db.formations.filter(f=>f.supports>0).length>=3,"IND 6","formations","Catalogue");
+  add("Veille légale alimentée", db.veilles.some(v=>v.theme==="legale"),"IND 23","veille","Veille");
+  add("Veille métiers alimentée", db.veilles.some(v=>v.theme==="metiers"),"IND 24","veille","Veille");
+  add("Veille pédagogique alimentée", db.veilles.some(v=>v.theme==="pedago"),"IND 25","veille","Veille");
+  add("Veilles exploitées (actions décrites)", db.veilles.some(v=>v.exploitation?.trim()),"IND 23-25","veille","Veille");
+  add("Conventions déposées", db.sessions.length>0 && db.sessions.every(s=>s.convention),"IND 9","sessions","Sessions");
+  add("Convocations envoyées", db.sessions.length>0 && db.sessions.every(s=>s.convocation),"IND 9","sessions","Sessions");
   add("Émargements complets sur les sessions terminées",
-      db.sessions.filter(s=>s.statut==="Terminée").every(s=>emSigned(s)>=emTotal(s) && s.emF.every(Boolean)),"IND 9","sessions");
-  add("Rapports de session rédigés", db.sessions.filter(s=>s.statut==="Terminée").every(s=>s.rapport.fait),"IND 32","sessions");
-  add("Développement des compétences tracé", db.formateurs.some(t=>(t.suivis||[]).length>0),"IND 22","formateurs");
-  add("Financeurs référencés", db.financeurs.length>0,"IND 1","financeurs");
-  add("Identité de l'organisme complète (SIRET, NDA)", !!(db.org.siret&&db.org.nda),"IND 1","organisme");
-  add("Modalités et délais d'accès publiés", !!(db.org.modalitesAcces.trim()&&db.org.delaisAcces.trim()),"IND 1","organisme");
-  add("Actions d'amélioration continue tracées", db.ameliorations.length>0,"IND 30-32","organisme");
+      db.sessions.filter(s=>s.statut==="Terminée").every(s=>emSigned(s)>=emTotal(s) && s.emF.every(Boolean)),"IND 9","sessions","Sessions");
+  add("Rapports de session rédigés", db.sessions.filter(s=>s.statut==="Terminée").every(s=>s.rapport.fait),"IND 32","sessions","Sessions");
+  add("Développement des compétences tracé", db.formateurs.some(t=>(t.suivis||[]).length>0),"IND 22","formateurs","Équipe");
+  add("Financeurs référencés", db.financeurs.length>0,"IND 1","financeurs","Catalogue");
+  add("Identité de l'organisme complète (SIRET, NDA)", !!(db.org.siret&&db.org.nda),"IND 1","organisme","Catalogue");
+  add("Modalités et délais d'accès publiés", !!(db.org.modalitesAcces.trim()&&db.org.delaisAcces.trim()),"IND 1","organisme","Catalogue");
+  add("Actions d'amélioration continue tracées", db.ameliorations.length>0,"IND 30-32","organisme","Amélioration");
   const ok=pts.filter(p=>p.ok).length;
   return {pts, ok, total:pts.length, pct:Math.round(ok/pts.length*100)};
 }
+const CATEGORIES_CONF=["Catalogue","Sessions","Veille","Équipe","Amélioration"];
+/* Les jauges couvrent l'intégralité des points : leur somme égale le total affiché. */
 const groupes=()=>{
   const c=conformite().pts;
-  const by=(...inds)=>{const g=c.filter(p=>inds.some(i=>p.ind.includes(i)));return{ok:g.filter(p=>p.ok).length,t:g.length};};
-  return [["Catalogue",by("IND 1","IND 6")],["Sessions",by("IND 9","IND 32")],["Veille",by("IND 23","IND 24","IND 25")],["Équipe",by("IND 22")]];
+  return CATEGORIES_CONF.map(cat=>{
+    const g=c.filter(p=>p.cat===cat);
+    return [cat,{ok:g.filter(p=>p.ok).length,t:g.length}];
+  }).filter(([,g])=>g.t);
 };
 
 /* ═══════════════ MENU ═══════════════ */
@@ -685,26 +644,76 @@ function renderMenu(){
   MENU.map(g=>(g.sec?`<div class="navsec">${g.sec}</div>`:"")+g.items.map(([id,lbl,ic,cls])=>{
     const actif = id===PARENT[route.view] || route.view===id;
     const c=counts[id]?counts[id]():null;
-    return `<button class="nav ${cls||""} ${actif?"on":""}" data-go="${id}">${ic} ${lbl}`+
+    return `<button class="nav ${cls||""} ${actif?"on":""}"${actif?' aria-current="page"':""} data-go="${id}">${ic} ${lbl}`+
       (cls==="grad"?`<span class="sparkle">${I.spark}</span>`:(c!==null?`<span class="cnt">${c}</span>`:""))+`</button>`;
   }).join("")).join("")+
   `<div class="foot"><span class="premium">Espace formateur · lauraballo.com</span></div>`;
+  /* En dessous de 940 px la barre devient horizontale et défilante : sans cela
+     l'onglet actif reste hors écran et on croit être resté sur « Tableau de bord ». */
+  const actif=$("#side .nav.on");
+  if(actif && $("#side").scrollWidth > $("#side").clientWidth)
+    actif.scrollIntoView({inline:"center",block:"nearest",behavior:"instant"});
 }
 
 /* ═══════════════ ROUTAGE ═══════════════ */
-function go(view,param){route={view,param};draft=null;render();window.scrollTo({top:0,behavior:"smooth"});}
+const VUES={dash:vDash,conf:vConf,sessions:vSessions,"session-detail":vSessionDetail,"new-session":vNewSession,
+  formations:vFormations,"formation-detail":vFormationDetail,apprenants:vApprenants,"apprenant-detail":vApprenantDetail,inscription:vInscription,import:vImport,formateurs:vFormateurs,"formateur-detail":vFormateurDetail,clients:vClients,"client-detail":vClientDetail,
+  financeurs:vFinanceurs,"financeur-detail":vFinanceurDetail,veille:vVeille,modeles:vModeles,"modele-detail":vModeleDetail,"veille-new":vVeilleNew,organisme:vOrganisme,aide:vAide};
+
+/* L'écran courant vit dans l'URL : un lien peut être partagé ou mis en favori,
+   et « Précédent » revient à l'écran précédent au lieu de quitter l'application. */
+const hashDeRoute=r=>"#"+r.view+(r.param?"/"+encodeURIComponent(r.param):"");
+function routeDeHash(){
+  const h=location.hash.replace(/^#/,"");
+  if(!h) return null;
+  const i=h.indexOf("/");
+  const view=i<0?h:h.slice(0,i);
+  const param=i<0?null:decodeURIComponent(h.slice(i+1));
+  return VUES[view]?{view,param}:null;
+}
+const memeRoute=(a,b)=>a.view===b.view&&(a.param||null)===(b.param||null);
+
+function go(view,param){
+  route={view,param:param||null};draft=null;
+  const h=hashDeRoute(route);
+  if(location.hash!==h) location.hash=h;   /* déclenche hashchange, qui ne re-rendra pas */
+  render();
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+window.addEventListener("hashchange",()=>{
+  const r=routeDeHash();
+  if(!r||memeRoute(r,route)) return;       /* déjà affiché : rien à faire */
+  route=r;draft=null;render();
+  window.scrollTo({top:0,behavior:"smooth"});
+});
+
+/* Un rafraîchissement en cours de saisie effacerait le formulaire ouvert. */
+window.addEventListener("beforeunload",e=>{ if(draft){ e.preventDefault(); e.returnValue=""; } });
+
+/* Le re-rendu remplace tout le DOM : sans cela le focus retombe sur <body>
+   à chaque clic et la navigation au clavier repart de zéro. */
+const ATTRS_FOCUS=["data-go","data-act","data-param","data-t","data-a","data-b","data-s"];
+function cleFocus(el){
+  if(!el||el===document.body||!el.getAttribute) return null;
+  if(el.id) return "#"+el.id;
+  const parts=ATTRS_FOCUS.filter(a=>el.hasAttribute(a))
+    .map(a=>`[${a}="${el.getAttribute(a).replace(/"/g,'\\"')}"]`);
+  return parts.length?parts.join(""):null;
+}
 function render(){
+  const focus=cleFocus(document.activeElement);
   renderMenu();
-  const V={dash:vDash,conf:vConf,sessions:vSessions,"session-detail":vSessionDetail,"new-session":vNewSession,
-    formations:vFormations,"formation-detail":vFormationDetail,apprenants:vApprenants,"apprenant-detail":vApprenantDetail,inscription:vInscription,import:vImport,formateurs:vFormateurs,"formateur-detail":vFormateurDetail,clients:vClients,"client-detail":vClientDetail,
-    financeurs:vFinanceurs,"financeur-detail":vFinanceurDetail,veille:vVeille,modeles:vModeles,"modele-detail":vModeleDetail,"veille-new":vVeilleNew,organisme:vOrganisme,aide:vAide};
-  $("#main").innerHTML=`<section class="view on">${(V[route.view]||vDash)()}</section>`;
+  $("#main").innerHTML=`<section class="view on">${(VUES[route.view]||vDash)()}</section>`;
   if(afterRender[route.view]) afterRender[route.view]();
+  if(focus){ const el=$(focus); if(el) el.focus({preventScroll:true}); }
 }
 const afterRender={};
 document.addEventListener("click",e=>{
-  const g=e.target.closest("[data-go]"); if(g){go(g.dataset.go,g.dataset.param);return;}
-  const a=e.target.closest("[data-act]"); if(a){ACT[a.dataset.act]?.(a);}
+  const g=e.target.closest("[data-go]"), a=e.target.closest("[data-act]");
+  /* Le plus proche de la cible gagne : un bouton d'action placé dans une ligne
+     cliquable doit exécuter son action, pas la navigation de la ligne. */
+  if(a && (!g || g.contains(a))){ACT[a.dataset.act]?.(a);return;}
+  if(g){go(g.dataset.go,g.dataset.param);}
 });
 const head=(ic,h1,p,actions="")=>`<div class="ph"><div class="icobox">${ic}</div><div><h1>${h1}</h1><p>${p}</p></div>
   ${actions?`<div class="sp">${actions}</div>`:""}</div>`;
@@ -716,12 +725,12 @@ function vDash(){
   const apprenantsFormes=new Set(db.sessions.flatMap(s=>s.inscrits.map(i=>i.aId))).size;
   const notes=db.sessions.flatMap(s=>s.inscrits.filter(i=>i.sat)).length;
   const aFaire=c.pts.filter(p=>!p.ok);
-  return head(I.dash,"Tableau de bord","Jeudi 6 août 2026 — vue d'ensemble de votre activité",
+  return head(I.dash,"Tableau de bord",`${dateLongue()} — vue d'ensemble de votre activité`,
     `<button class="btn sec" data-go="import">Importer des apprenants</button>
      <button class="btn pri" data-go="new-session">+ Nouvelle session</button>`)+
   `<div class="conf"><div class="t">Conformité Qualiopi : ${c.pct} %</div><div class="gauges">
     ${groupes().map(([lbl,g])=>`<div class="g ${g.ok===g.t?"done":""}"><div class="l"><span>${lbl}</span><b>${g.ok}/${g.t}</b></div>
-      <div class="bar"><i class="${g.ok===g.t?"full":""}" style="width:${g.t?Math.max(3,g.ok/g.t*100):3}%"></i></div></div>`).join("")}
+      <div class="bar"><i class="${g.ok===g.t?"full":""}" style="width:${g.t?(g.ok/g.t*100):0}%"></i></div></div>`).join("")}
   </div></div>
   <div class="kpis">
     <div class="kpi"><div class="v">${db.sessions.filter(s=>s.statut!=="Terminée").length}</div><div class="l">Sessions à venir</div></div>
@@ -742,14 +751,17 @@ function tableSessions(){
   if(!db.sessions.length) return `<div class="empty"><div class="e">${I.sessions}</div><b>Aucune session</b>
     <p>Créez votre première session : la formation choisie apportera son programme et ses supports.</p>
     <button class="btn pri" data-go="new-session">+ Nouvelle session</button></div>`;
-  return `<table style="margin-top:14px"><thead><tr><th>Session</th><th>Dates</th><th>Client</th><th>Apprenants</th><th>Émargement</th><th></th></tr></thead><tbody>
+  return `<div class="tw" tabindex="0"><table style="margin-top:14px"><thead><tr><th>Session</th><th>Dates</th><th>Client</th><th>Apprenants</th><th>Émargement</th><th></th></tr></thead><tbody>
   ${db.sessions.map(s=>{const done=emSigned(s),tot=emTotal(s);return `<tr class="click" data-go="session-detail" data-param="${s.id}">
     <td><b>${esc(s.titre)}</b><span class="s">${esc(F(s.formationId)?.nom||"—")} · ${s.type}</span></td>
     <td>${sessLabel(s)}<span class="s">${s.creneaux.length} créneaux · ${nbH(sessHeures(s))}</span></td>
     <td>${esc(C(s.clientId)?.nom||"—")}</td><td>${s.inscrits.length}</td>
     <td><div class="prog"><i style="width:${tot?done/tot*100:0}%"></i></div><span class="s">${done} / ${tot} signés</span></td>
-    <td class="right"><span class="chev">›</span></td></tr>`;}).join("")}
-  </tbody></table>`;
+    <td class="right" style="white-space:nowrap">
+      <button class="btn sec sm danger" data-act="delSession" data-s="${s.id}"
+        aria-label="Supprimer la session ${esc(s.titre)}">Supprimer</button>
+      <span class="chev" aria-hidden="true">›</span></td></tr>`;}).join("")}
+  </tbody></table></div>`;
 }
 
 /* ═══════════════ SESSIONS ═══════════════ */
@@ -764,7 +776,7 @@ const STD=[["Matin","09:00","12:30"],["Après-midi","13:30","17:00"],["Soirée",
 function vNewSession(){
   if(!draft) draft={formationId:db.formations[0].id,clientId:db.clients[0].id,formateurId:db.formateurs[0].id,
     type:"INTRA",code:String(db.sessions.length+1),lieu:"",titre:"",financeurId:"",modalites:["Présentiel"],
-    creneaux:[{date:"2026-09-15",type:"Matin",d:"09:00",f:"12:30"},{date:"2026-09-15",type:"Après-midi",d:"13:30",f:"17:00"}]};
+    creneaux:(j=>[{date:j,type:"Matin",d:"09:00",f:"12:30"},{date:j,type:"Après-midi",d:"13:30",f:"17:00"}])(dateProchaine())};
   return head(I.sessionNew,"Nouvelle session","Créez une session de formation et son planning",
     `<button class="btn sec" data-go="sessions">← Retour</button>`)+
   `<div class="card"><div class="ct">Informations de la session</div>
@@ -830,8 +842,10 @@ function vSessionDetail(){
   return head(I.sessionDet,esc(s.titre),
     `${esc(C(s.clientId)?.nom||"—")} · ${s.type} · ${sessLabel(s)}${sessHoraires(s)?" · "+esc(sessHoraires(s)):""} · ${nbH(sessHeures(s))} · code ${esc(s.code)}`,
     `${manque.length?`<span class="tag warn">${manque.length} pièce${manque.length>1?"s":""} manquante${manque.length>1?"s":""}</span>`:`<span class="tag ok">Dossier complet</span>`}
-     <button class="btn sec" data-go="sessions">← Retour</button>`)+
-  `<div class="tabs">${tabs.map(([id,l,n])=>`<button class="tab ${tabSession===id?"on":""}" data-act="tab" data-t="${id}">${l}${n!==null?`<span class="n">${n}</span>`:""}</button>`).join("")}</div>`+
+     <button class="btn sec" data-go="sessions">← Retour</button>
+     <button class="btn sec danger" data-act="delSession" data-s="${s.id}"
+       aria-label="Supprimer la session ${esc(s.titre)}">Supprimer la session</button>`)+
+  `<div class="tabs" role="tablist">${tabs.map(([id,l,n])=>`<button class="tab ${tabSession===id?"on":""}" role="tab" aria-selected="${tabSession===id}" data-act="tab" data-t="${id}">${l}${n!==null?`<span class="n">${n}</span>`:""}</button>`).join("")}</div>`+
   ({apprenants:tabApprenants,besoin:tabBesoin,planning:tabPlanning,documents:tabDocuments,rapport:tabRapport}[tabSession])(s);
 }
 let selApprenants=[];
@@ -842,7 +856,7 @@ function tabApprenants(s){
     <div style="padding:18px 20px;display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap">
       <div><div class="ct">Apprenants inscrits</div><div class="cd">Les signatures proviennent des liens stagiaire et formateur : elles ne se saisissent pas ici.</div></div>
     </div>
-    ${s.inscrits.length?`<table><thead><tr><th>Apprenant</th><th>Convocation</th><th>Positionnement</th><th>Émargement (${s.creneaux.length} créneaux)</th><th>Évaluation</th><th>Satisfaction</th><th>Attestation</th><th>À froid</th><th></th></tr></thead><tbody>
+    ${s.inscrits.length?`<div class="tw" tabindex="0"><table><thead><tr><th>Apprenant</th><th>Convocation</th><th>Positionnement</th><th>Émargement (${s.creneaux.length} créneaux)</th><th>Évaluation</th><th>Satisfaction</th><th>Attestation</th><th>À froid</th><th></th></tr></thead><tbody>
     ${s.inscrits.map((i,ii)=>{const a=A(i.aId);return `<tr>
       <td><div class="who"><span class="av">${initials(a)}</span><span><b>${esc(fullName(a))}</b><span class="s">${esc(a.email)}</span></span></div></td>
       <td><button class="tag ${i.convoc?"ok":"warn"}" data-act="convocLigne" data-s="${s.id}" data-a="${a.id}"
@@ -866,7 +880,7 @@ function tabApprenants(s){
           ? `<button class="btn sec sm" data-act="copierLien" data-url="${esc(s.lienFormateur)}">Copier le lien</button>
              <a class="btn pri sm" href="${esc(s.lienFormateur)}" target="_blank" rel="noopener">Ouvrir</a>`
           : `<span class="s">Lien non disponible</span>`}</td></tr>
-    </tbody></table>`:`<div class="empty"><div class="e">${I.apprenants}</div><b>Aucun apprenant inscrit</b>
+    </tbody></table></div>`:`<div class="empty"><div class="e">${I.apprenants}</div><b>Aucun apprenant inscrit</b>
       <p>Importez une liste ou piochez dans votre répertoire.</p>
       <button class="btn pri" data-go="import">+ Importer des apprenants</button></div>`}
   </div>
@@ -943,11 +957,11 @@ function tabPlanning(s){
   ${s.creneaux.length?`<div class="card pad0">
     <div style="padding:18px 20px"><div class="ct">Signatures par créneau</div>
       <div class="cd">Recueillies depuis les liens stagiaire et formateur.</div></div>
-    <table><thead><tr><th>#</th><th>Date</th><th>Type</th><th>Horaires</th><th>Signatures</th></tr></thead><tbody>
+    <div class="tw" tabindex="0"><table><thead><tr><th>#</th><th>Date</th><th>Type</th><th>Horaires</th><th>Signatures</th></tr></thead><tbody>
     ${s.creneaux.map((c,ci)=>{const n=s.inscrits.filter(i=>i.em[ci]).length+(s.emF[ci]?1:0);const t=s.inscrits.length+1;
       return `<tr><td>${ci+1}</td><td>${fmtD(c.date)}</td><td>${c.type}</td><td>${c.d} – ${c.f}</td>
       <td><div class="prog"><i style="width:${t?n/t*100:0}%"></i></div><span class="s">${n} / ${t}</span></td></tr>`;}).join("")}
-    </tbody></table></div>`:""}`;
+    </tbody></table></div></div>`:""}`;
 }
 function tabDocuments(s){
   const f=F(s.formationId)||{files:{},urls:{}};
@@ -1043,7 +1057,7 @@ function vApprenants(){
     </div>
     <label class="ck" style="max-width:420px"><input type="checkbox" id="nAppAdapt"> Besoin d'adaptation à signaler <span class="ind">IND 26</span></label>
     <div class="acts"><button class="btn sec" data-act="hideAddAppr">Annuler</button><button class="btn pri" data-act="addAppr">Ajouter au répertoire</button></div></div>`:"")+
-  `<div class="card pad0">${db.apprenants.length?`<table>
+  `<div class="card pad0">${db.apprenants.length?`<div class="tw" tabindex="0"><table>
     <thead><tr><th>Apprenant</th><th>Entreprise</th><th>Fonction</th><th>Sessions suivies</th><th>Adaptation <span class="ind">IND 26</span></th><th></th></tr></thead><tbody>
     ${db.apprenants.map(a=>{const ss=sessionsOf(a);return `<tr>
       <td><div class="who"><span class="av">${initials(a)}</span><span><b class="lnk" data-go="apprenant-detail" data-param="${a.id}">${esc(fullName(a))}</b><span class="s">${esc(a.email||"—")}</span></span></div></td>
@@ -1054,7 +1068,7 @@ function vApprenants(){
       <td class="right" style="white-space:nowrap">
         <button class="btn sec sm" data-go="apprenant-detail" data-param="${a.id}">Fiche</button>
         <button class="btn sec sm danger" data-act="delAppr" data-a="${a.id}">Supprimer</button></td></tr>`;}).join("")}
-    </tbody></table>`:`<div class="empty"><div class="e">${I.apprenants}</div><b>Répertoire vide</b>
+    </tbody></table></div>`:`<div class="empty"><div class="e">${I.apprenants}</div><b>Répertoire vide</b>
       <p>Ajoutez vos apprenants un par un ou importez la liste envoyée par le client.</p>
       <button class="btn pri" data-go="import">⬆ Importer un fichier</button></div>`}</div>
   <div class="card"><div class="ct">Rattacher des apprenants à une session</div>
@@ -1087,8 +1101,7 @@ function vApprenantDetail(){
   if(!a) return vApprenants();
   route.param=a.id;
   const inscriptions=db.sessions.map(s=>({s,i:s.inscrits.find(x=>x.aId===a.id)})).filter(x=>x.i);
-  const AUJ="2026-08-06";
-  const estPassee=s=>s.statut==="Terminée"||(sessDates(s).slice(-1)[0]||"9999")<AUJ;
+  const estPassee=s=>s.statut==="Terminée"||(sessDates(s).slice(-1)[0]||"9999")<AUJ();
   const enCours=inscriptions.filter(x=>!estPassee(x.s));
   const passees=inscriptions.filter(x=>estPassee(x.s))
     .sort((x,y)=>(sessDates(y.s)[0]||"").localeCompare(sessDates(x.s)[0]||""));
@@ -1200,7 +1213,7 @@ function historiqueAppr(a,passees){
         <div class="cd">Parcours terminés — sert de preuve d'antériorité et alimente l'attestation.</div></div>
       <span class="tag ok" style="margin-left:auto">${passees.length} formation${passees.length>1?"s":""} · ${nbH(heures)}</span>
     </div>
-    <table><thead><tr><th>Session</th><th>Dates</th><th>Durée</th><th>Parcours</th><th>Résultat</th><th></th></tr></thead><tbody>
+    <div class="tw" tabindex="0"><table><thead><tr><th>Session</th><th>Dates</th><th>Durée</th><th>Parcours</th><th>Résultat</th><th></th></tr></thead><tbody>
     ${passees.map(({s,i})=>{
       const em=i.em.filter(Boolean).length,tot=i.em.length;
       const complet=i.pos&&em>=tot&&i.ev!=null&&i.sat;
@@ -1213,7 +1226,7 @@ function historiqueAppr(a,passees){
         <td>${i.ev!=null?`<span class="tag ok">${Math.round(i.ev*100)} %</span>`:`<span class="tag neutral">Non évalué</span>`}
           ${complet?`<span class="s">Attestation délivrable</span>`:`<span class="s">Parcours incomplet</span>`}</td>
         <td class="right"><button class="btn sec sm" data-go="inscription" data-param="${s.id}|${a.id}">Ouvrir</button></td></tr>`;}).join("")}
-    </tbody></table>
+    </tbody></table></div>
     <div style="padding:12px 20px" class="note">Ouvrir affiche l'inscription : pièces du parcours, convocation, financement et liens personnels.</div>
   </div>`;
 }
@@ -1345,11 +1358,11 @@ function vImport(){
         <div class="cd">Rien n'est enregistré tant que vous n'avez pas validé.</div></div>
       <span class="tag ${rows.length?"ok":"neutral"}" style="margin-left:auto">${rows.length} ligne${rows.length>1?"s":""} lue${rows.length>1?"s":""}</span>
     </div>
-    ${rows.length?`<table><thead><tr><th>Nom</th><th>Prénom</th><th>Email</th><th>Entreprise</th><th>Statut</th></tr></thead><tbody>
+    ${rows.length?`<div class="tw" tabindex="0"><table><thead><tr><th>Nom</th><th>Prénom</th><th>Email</th><th>Entreprise</th><th>Statut</th></tr></thead><tbody>
       ${rows.map(r=>`<tr><td><b>${esc(r.nom||"—")}</b></td><td>${esc(r.prenom)}</td><td>${esc(r.email||"—")}</td>
         <td>${esc(r.entreprise||"—")}</td>
         <td><span class="tag ${!r.nom?"bad":r.known?"warn":"ok"}">${!r.nom?"Ignorée — nom manquant":r.known?"Déjà au répertoire":"Nouvel apprenant"}</span></td></tr>`).join("")}
-      </tbody></table>
+      </tbody></table></div>
       <div style="padding:14px 20px" class="note"><b>${neuf}</b> apprenant${neuf>1?"s":""} à créer ·
         <b>${connu}</b> déjà présent${connu>1?"s":""}, ignoré${connu>1?"s":""} pour éviter les doublons
         ${invalides?` · <b>${invalides}</b> ligne${invalides>1?"s":""} sans nom, non importée${invalides>1?"s":""}`:""}.
@@ -1468,7 +1481,7 @@ function vVeille(){
   `<div class="themes">${Object.entries(THEMES).map(([k,t])=>{const n=parTheme(k).length;
     return `<div class="theme ${n?"on":""}"><span class="tic">${t.ic}</span><div><div class="tt">${t.titre}</div>
       <span class="ind">${t.ind}</span><div class="n">${n?`${n} entrée${n>1?"s":""}`:"Aucune entrée — à alimenter"}</div></div></div>`;}).join("")}</div>
-  <div class="card pad0">${db.veilles.length?`<table>
+  <div class="card pad0">${db.veilles.length?`<div class="tw" tabindex="0"><table>
     <thead><tr><th>Élément de veille</th><th>Thématique</th><th>Date</th><th>Exploitation</th><th>Statut</th><th></th></tr></thead><tbody>
     ${db.veilles.slice().sort((a,b)=>b.date.localeCompare(a.date)).map(v=>`<tr>
       <td><b>${esc(v.titre)}</b><span class="s">${esc(v.source||"Source non précisée")}</span></td>
@@ -1477,12 +1490,12 @@ function vVeille(){
       <td>${v.exploitation?.trim()?`<span class="tag ok">Décrite</span>`:`<span class="tag bad">Manquante</span>`}</td>
       <td><span class="tag ${v.statut==="Fait"?"ok":v.statut==="En cours"?"warn":"neutral"}">${v.statut}</span></td>
       <td class="right"><button class="btn sec sm danger" data-act="delVeille" data-v="${v.id}">Supprimer</button></td></tr>`).join("")}
-    </tbody></table>`:`<div class="empty"><div class="e">${I.veille}</div><b>Aucune veille enregistrée</b>
+    </tbody></table></div>`:`<div class="empty"><div class="e">${I.veille}</div><b>Aucune veille enregistrée</b>
       <p>Une à deux entrées par mois suffisent. Chacune doit dire ce que vous avez lu, où, et surtout ce que vous en avez fait.</p>
       <button class="btn pri" data-go="veille-new">+ Ajouter ma première veille</button></div>`}</div>`;
 }
 function vVeilleNew(){
-  if(!draft) draft={theme:"legale",date:"2026-08-06",titre:"",source:"",desc:"",explo:"",
+  if(!draft) draft={theme:"legale",date:AUJ(),titre:"",source:"",desc:"",explo:"",
     responsable:"Laura Ballo",echeance:"",statut:"À traiter",formationId:"",canevas:null,preuves:0,preuvesEx:0};
   const t=THEMES[draft.theme];
   return head(I.veilleNew,"Ajoutez votre propre veille","Sélectionnez une thématique et enregistrez votre veille",
@@ -1551,7 +1564,7 @@ afterRender["veille-new"]=()=>{
 function vModeles(){
   const aFusionner=db.modeles.filter(m=>m.nature==="Modèle à fusionner");
   const figes=db.modeles.filter(m=>m.nature!=="Modèle à fusionner");
-  const tableau=(liste,vide)=>liste.length?`<table>
+  const tableau=(liste,vide)=>liste.length?`<div class="tw" tabindex="0"><table>
     <thead><tr><th>Modèle</th><th>Type</th><th>Indicateur</th><th>Version</th><th>Statut</th><th></th></tr></thead><tbody>
     ${liste.map(m=>`<tr>
       <td><b class="lnk" data-go="modele-detail" data-param="${m.id}">${esc(m.nom)}</b>
@@ -1560,9 +1573,9 @@ function vModeles(){
       <td>${esc(m.version||"—")}${m.maj?`<span class="s">${fmtDShort(m.maj)}</span>`:""}</td>
       <td><span class="tag ${m.statut==="Actif"?"ok":m.statut==="Brouillon"?"warn":"neutral"}">${esc(m.statut)}</span></td>
       <td class="right" style="white-space:nowrap">
-        <button class="btn sec sm" data-go="modele-detail" data-param="${m.id}">Modifier</button>
+        <button class="btn sec sm" data-go="modele-detail" data-param="${m.id}" aria-label="Modifier le modèle ${esc(m.titre||m.nom||"")}">Modifier</button>
         <a class="btn sec sm" href="${esc(m.url)}" target="_blank" rel="noopener">Notion ↗</a></td></tr>`).join("")}
-    </tbody></table>`:`<div class="note" style="padding:0 20px 18px">${vide}</div>`;
+    </tbody></table></div>`:`<div class="note" style="padding:0 20px 18px">${vide}</div>`;
 
   return head(I.modeles,"Modèles de documents","Ce que vous générez et ce que vous remettez",
     `<button class="btn pri" data-act="showAddMod">+ Nouveau modèle</button>`)+
@@ -1662,7 +1675,7 @@ function vFormations(){
   return head(I.formations,"Formations","Votre catalogue, sa conformité et sa publication",
     `<button class="btn pri" data-act="showAddForm">+ Ajouter une formation</button>`)+
   (draft?.addForm?drawerFormation():"")+
-  `<div class="card pad0">${db.formations.length?`<table>
+  `<div class="card pad0">${db.formations.length?`<div class="tw" tabindex="0"><table>
     <thead><tr><th>Formation</th><th>Durée</th><th>Tags</th><th>Tarif intra</th><th>Publication</th><th>Conformité</th><th></th></tr></thead><tbody>
     ${db.formations.map(f=>{const c=confFormation(f);return `<tr>
       <td><b>${esc(f.nom)}</b><span class="s">${esc(f.code)}${f.categorie?" · "+esc(f.categorie):""}</span></td>
@@ -1673,9 +1686,9 @@ function vFormations(){
       <td><span class="tag ${f.statutPub==="Publié"?"ok":f.statutPub==="À publier"||f.statutPub==="À modifier"?"warn":f.statutPub==="À supprimer"?"bad":"neutral"}">${esc(f.statutPub)}</span></td>
       <td><div class="prog"><i style="width:${c.pct}%"></i></div><span class="s">${c.pct} %</span></td>
       <td class="right" style="white-space:nowrap">
-        <button class="btn sec sm" data-go="formation-detail" data-param="${f.id}">Modifier</button>
+        <button class="btn sec sm" data-go="formation-detail" data-param="${f.id}" aria-label="Modifier la formation ${esc(f.nom)}">Modifier</button>
         <button class="btn sec sm danger" data-act="delFormation" data-f="${f.id}">Supprimer</button></td></tr>`;}).join("")}
-    </tbody></table>`:`<div class="empty"><div class="e">${I.formations}</div><b>Catalogue vide</b>
+    </tbody></table></div>`:`<div class="empty"><div class="e">${I.formations}</div><b>Catalogue vide</b>
       <p>Créez votre première formation : elle deviendra sélectionnable à la création d'une session.</p>
       <button class="btn pri" data-act="showAddForm">+ Ajouter une formation</button></div>`}</div>`;
 }
@@ -1752,8 +1765,8 @@ function vFormationDetail(){
      <button class="btn sec" data-go="formations">← Retour</button>`)+
   `<div class="conf"><div class="t">Conformité Qualiopi : ${c.pct} %</div><div class="gauges">
     ${jauges.map(([l,o,t])=>`<div class="g ${o===t?"done":""}"><div class="l"><span>${l}</span><b>${o}/${t}</b></div>
-      <div class="bar"><i class="${o===t?"full":""}" style="width:${t?Math.max(3,o/t*100):3}%"></i></div></div>`).join("")}</div></div>
-  <div class="tabs">${tabs.map(([id,l,n])=>`<button class="tab ${tabF===id?"on":""}" data-act="tabF" data-t="${id}">${l}${n?`<span class="n">${n}</span>`:""}</button>`).join("")}</div>`+
+      <div class="bar"><i class="${o===t?"full":""}" style="width:${t?(o/t*100):0}%"></i></div></div>`).join("")}</div></div>
+  <div class="tabs" role="tablist">${tabs.map(([id,l,n])=>`<button class="tab ${tabF===id?"on":""}" role="tab" aria-selected="${tabF===id}" data-act="tabF" data-t="${id}">${l}${n?`<span class="n">${n}</span>`:""}</button>`).join("")}</div>`+
   ({infos:fInfos,formateurs:fFormateurs,moyens:fMoyens,contenu:fContenu,evals:fEvals,publication:fPublication}[tabF])(f);
 }
 function fInfos(f){
@@ -1883,7 +1896,9 @@ function fEvals(f){
     <div class="todo"><span class="d ok"></span> Évaluation à froid (J+90) <span class="ind">IND 32</span><span class="go">Ouvrir ›</span></div></div>`;
 }
 function fPublication(f){
-  const url=f.slug?`https://lauraballo.com/formations/${f.slug}/`:"";
+  /* Le slug est saisi à la main : on le normalise avant de le poser dans un href. */
+  const slug=(f.slug||"").trim().replace(/[^a-z0-9-]/gi,"-").replace(/-+/g,"-").replace(/^-|-$/g,"");
+  const url=slug?`https://lauraballo.com/formations/${slug}/`:"";
   return `<div class="card"><div class="chead"><div><div class="ct">Publication sur le site</div>
     <div class="cd">Le statut déclenche la génération de la page publique.</div></div>
     <div class="sp"><button class="btn pri sm" data-act="saveF">Enregistrer</button></div></div>
@@ -1893,7 +1908,7 @@ function fPublication(f){
       <div class="fld"><label>Slug</label><input type="text" data-f="slug" value="${esc(f.slug)}" placeholder="prise-de-parole-media-training"></div>
     </div>
     <div class="fld"><label>Lien de la page publique</label>
-      ${url?`<div class="linkbox"><a href="${url}" target="_blank" rel="noopener">${url}</a>
+      ${url?`<div class="linkbox"><a href="${esc(url)}" target="_blank" rel="noopener">${esc(url)}</a>
         <span class="tag ${f.statutPub==="Publié"?"ok":"warn"}">${f.statutPub==="Publié"?"En ligne":"Pas encore en ligne"}</span></div>`
       :`<div class="note">Renseignez le slug pour obtenir l'adresse de la page.</div>`}</div>
     <div class="g2">
@@ -1944,7 +1959,7 @@ function vFormateurs(){
   return head(I.formateurs,"Formateurs &amp; intervenants","Qualification et développement des compétences",
     `<button class="btn pri" data-act="showAddT">+ Ajouter un formateur</button>`)+
   (draft?.addT?drawerFormateur():"")+
-  `<div class="card pad0"><table>
+  `<div class="card pad0"><div class="tw" tabindex="0"><table>
     <thead><tr><th>Intervenant</th><th>Statut</th><th>Habilitations</th><th>Justificatifs <span class="ind">IND 21</span></th><th>Suivi <span class="ind">IND 22</span></th><th></th></tr></thead><tbody>
     ${db.formateurs.map(t=>{const c=confFormateur(t);return `<tr>
       <td><div class="who"><span class="av">${initials({nom:t.nom,prenom:t.prenom})}</span>
@@ -1956,9 +1971,9 @@ function vFormateurs(){
         `<span class="et ${v?"on":""}" title="${l}">${l}</span>`).join("")}</div></td>
       <td>${(t.suivis||[]).length?`<span class="tag ok">${t.suivis.length} action${t.suivis.length>1?"s":""}</span>`:`<span class="tag bad">Aucune</span>`}</td>
       <td class="right" style="white-space:nowrap">
-        <button class="btn sec sm" data-go="formateur-detail" data-param="${t.id}">Modifier</button>
+        <button class="btn sec sm" data-go="formateur-detail" data-param="${t.id}" aria-label="Modifier la fiche de ${esc(fullName(t))}">Modifier</button>
         <button class="btn sec sm danger" data-act="delT" data-t="${t.id}">Supprimer</button></td></tr>`;}).join("")}
-    </tbody></table></div>`;
+    </tbody></table></div></div>`;
 }
 const nomT=t=>[t.prenom,t.nom].filter(Boolean).join(" ");
 function confFormateur(t){
@@ -2017,8 +2032,8 @@ function vFormateurDetail(){
   `<div class="conf"><div class="t">Conformité Qualiopi : ${c.pct} %</div><div class="gauges">
     ${jauges.map(([l,g])=>{const o=g.filter(p=>p[1]).length;return `<div class="g ${o===g.length?"done":""}">
       <div class="l"><span>${l}</span><b>${o}/${g.length}</b></div>
-      <div class="bar"><i class="${o===g.length?"full":""}" style="width:${g.length?Math.max(3,o/g.length*100):3}%"></i></div></div>`;}).join("")}</div></div>
-  <div class="tabs">${tabs.map(([id,l,n])=>`<button class="tab ${tabT===id?"on":""}" data-act="tabT" data-t="${id}">${l}${n?`<span class="n">${n}</span>`:""}</button>`).join("")}</div>`+
+      <div class="bar"><i class="${o===g.length?"full":""}" style="width:${g.length?(o/g.length*100):0}%"></i></div></div>`;}).join("")}</div></div>
+  <div class="tabs" role="tablist">${tabs.map(([id,l,n])=>`<button class="tab ${tabT===id?"on":""}" role="tab" aria-selected="${tabT===id}" data-act="tabT" data-t="${id}">${l}${n?`<span class="n">${n}</span>`:""}</button>`).join("")}</div>`+
   ({infos:tInfos,quali:tQuali,suivi:tSuivi,admin:tAdmin}[tabT])(t);
 }
 function tInfos(t){
@@ -2104,7 +2119,7 @@ function tSuivi(t){
       <div class="g2">
         <div class="fld"><label>Intitulé *</label><input type="text" id="svTitre" placeholder="Ex : Prompt engineering avancé"></div>
         <div class="fld"><label>Type</label><select id="svType">${TYPES_SUIVI.map(x=>`<option>${x}</option>`).join("")}</select></div>
-        <div class="fld"><label>Date</label><input type="date" id="svDate" value="2026-08-06"></div>
+        <div class="fld"><label>Date</label><input type="date" id="svDate" value="${AUJ()}"></div>
         <div class="fld"><label>Durée (heures)</label><input type="number" id="svDuree" step="0.5" placeholder="14"></div>
       </div>
       <div class="fld"><label>Organisme ou source</label><input type="text" id="svOrg" placeholder="Organisme, intervenant ou origine du retour"></div>
@@ -2112,14 +2127,14 @@ function tSuivi(t){
       <div class="fld"><label>Suites données</label><textarea id="svSuites" style="min-height:64px" placeholder="Ce qui change dans la pratique ou dans l'offre"></textarea></div>
       <div class="acts" style="margin-top:0"><button class="btn sec" data-act="hideAddSuivi">Annuler</button>
         <button class="btn pri" data-act="addSuivi">Enregistrer le suivi</button></div></div>`:""}
-    ${suivis.length?`<table><thead><tr><th>Action</th><th>Type</th><th>Date</th><th>Durée</th><th>Suites données</th><th></th></tr></thead><tbody>
+    ${suivis.length?`<div class="tw" tabindex="0"><table><thead><tr><th>Action</th><th>Type</th><th>Date</th><th>Durée</th><th>Suites données</th><th></th></tr></thead><tbody>
       ${suivis.map(s=>`<tr>
         <td><b>${esc(s.titre)}</b><span class="s">${esc(s.organisme||"—")}</span></td>
         <td><span class="tag ${s.type==="Certification obtenue"?"ok":s.type==="Entretien professionnel"?"vio":"info"}">${esc(s.type)}</span></td>
         <td>${fmtDShort(s.date)}</td><td>${s.duree?nbH(+s.duree):"—"}</td>
         <td>${esc(s.suites||"—")}${s.preuve?`<span class="s">📎 ${esc(s.preuve)}</span>`:`<span class="s">Aucune preuve jointe</span>`}</td>
         <td class="right"><button class="btn sec sm danger" data-act="delSuivi" data-i="${s.id}">✕</button></td></tr>`).join("")}
-      </tbody></table>`
+      </tbody></table></div>`
     :`<div class="empty"><div class="e">${I.conf}</div><b>Aucun suivi enregistré</b>
       <p>Ajoutez un suivi pour tracer l'évolution des compétences. Deux actions par an suffisent à couvrir l'indicateur 22.</p>
       <button class="btn pri" data-act="showAddSuivi">+ Nouveau suivi</button></div>`}
@@ -2171,7 +2186,7 @@ function vClients(){
   return head(I.clients,"Clients","Gérez votre carnet de clients et donneurs d'ordre",
     `<button class="btn pri" data-act="showAddC">+ Ajouter un client</button>`)+
   (draft?.addC?drawerClient():"")+
-  `<div class="card pad0"><table>
+  `<div class="card pad0"><div class="tw" tabindex="0"><table>
     <thead><tr><th>Client</th><th>Statut</th><th>Ville</th><th>Sessions</th><th>Documents</th><th>Dossier</th><th></th></tr></thead><tbody>
     ${db.clients.map(c=>{const k=confClient(c);const ss=db.sessions.filter(s=>s.clientId===c.id);
       return `<tr>
@@ -2182,9 +2197,9 @@ function vClients(){
       <td>${(c.docs||[]).length?`<span class="tag ok">${c.docs.length}</span>`:`<span class="tag neutral">—</span>`}</td>
       <td>${k.manque.length?`<span class="tag bad">${k.manque.length} manque${k.manque.length>1?"s":""}</span>`:`<span class="tag ok">Complet</span>`}</td>
       <td class="right" style="white-space:nowrap">
-        <button class="btn sec sm" data-go="client-detail" data-param="${c.id}">Modifier</button>
+        <button class="btn sec sm" data-go="client-detail" data-param="${c.id}" aria-label="Modifier le client ${esc(c.nom)}">Modifier</button>
         <button class="btn sec sm danger" data-act="delC" data-c="${c.id}">Supprimer</button></td></tr>`;}).join("")}
-    </tbody></table></div>`;
+    </tbody></table></div></div>`;
 }
 function confClient(c){
   const manque=[];
@@ -2245,7 +2260,7 @@ function vClientDetail(){
      <button class="btn sec" data-go="clients">← Retour</button>`)+
   (k.manque.length?`<div class="alert"><div class="at">⚠ Preuves manquantes (${k.manque.length})</div>
     <ul>${k.manque.map(m=>`<li>${m}</li>`).join("")}</ul></div>`:"")+
-  `<div class="tabs">${tabs.map(([id,l,n])=>`<button class="tab ${tabC===id?"on":""}" data-act="tabC" data-t="${id}">${l}${n?`<span class="n">${n}</span>`:""}</button>`).join("")}</div>`+
+  `<div class="tabs" role="tablist">${tabs.map(([id,l,n])=>`<button class="tab ${tabC===id?"on":""}" role="tab" aria-selected="${tabC===id}" data-act="tabC" data-t="${id}">${l}${n?`<span class="n">${n}</span>`:""}</button>`).join("")}</div>`+
   ({infos:cInfos,docs:cDocs,histo:cHisto}[tabC])(c);
 }
 function cInfos(c){
@@ -2336,14 +2351,14 @@ function cDocs(c){
           <div class="s">PDF, DOC, DOCX — max 30 Mo</div></label></div>
       <div class="acts" style="margin-top:0"><button class="btn sec" data-act="hideAddDoc">Annuler</button>
         <button class="btn pri" data-act="addDoc">Ajouter</button></div></div>`:""}
-    ${docs.length?`<table><thead><tr><th>Document</th><th>Type</th><th>Envoyé</th><th>Montant</th><th>Statut</th><th></th></tr></thead><tbody>
+    ${docs.length?`<div class="tw" tabindex="0"><table><thead><tr><th>Document</th><th>Type</th><th>Envoyé</th><th>Montant</th><th>Statut</th><th></th></tr></thead><tbody>
       ${docs.map(d=>`<tr>
         <td><b>${esc(d.titre)}</b><span class="s">${d.fichier?"📎 "+esc(d.fichier):"Aucun fichier joint"}${d.signature?` · signé le ${fmtDShort(d.signature)}`:""}</span></td>
         <td>${esc(d.type)}</td><td>${d.envoi?fmtDShort(d.envoi):"—"}</td>
         <td>${d.montant?(+d.montant).toLocaleString("fr-FR")+" €":"—"}</td>
         <td><select class="mini-sel" data-doc="${d.id}">${STATUTS_DOC.map(s=>`<option ${d.statut===s?"selected":""}>${s}</option>`).join("")}</select></td>
         <td class="right"><button class="btn sec sm danger" data-act="delDoc" data-d="${d.id}">✕</button></td></tr>`).join("")}
-      </tbody></table>`
+      </tbody></table></div>`
     :`<div class="empty"><div class="e">${I.import}</div><b>Aucun document</b>
       <p>Importez vos devis et conventions pour suivre leur signature et prouver la contractualisation.</p>
       <button class="btn pri" data-act="showAddDoc">+ Ajouter un document</button></div>`}
@@ -2355,12 +2370,12 @@ function cHisto(c){
   return `<div class="card pad0">
     <div style="padding:18px 20px"><div class="ct">Formations réalisées</div>
       <div class="cd">Historique des sessions animées pour ce client.</div></div>
-    ${ss.length?`<table><thead><tr><th>Session</th><th>Dates</th><th>Durée</th><th>Apprenants</th><th>Statut</th><th></th></tr></thead><tbody>
+    ${ss.length?`<div class="tw" tabindex="0"><table><thead><tr><th>Session</th><th>Dates</th><th>Durée</th><th>Apprenants</th><th>Statut</th><th></th></tr></thead><tbody>
       ${ss.map(s=>`<tr><td><b>${esc(s.titre)}</b><span class="s">${esc(F(s.formationId)?.nom||"—")}</span></td>
         <td>${sessLabel(s)}</td><td>${nbH(sessHeures(s))}</td><td>${s.inscrits.length}</td>
         <td><span class="tag ${s.statut==="Terminée"?"ok":"info"}">${s.statut}</span></td>
         <td class="right"><button class="btn sec sm" data-go="session-detail" data-param="${s.id}">Ouvrir</button></td></tr>`).join("")}
-      </tbody></table>`:`<div class="note" style="padding:0 20px 18px">Aucune session pour ce client.</div>`}
+      </tbody></table></div>`:`<div class="note" style="padding:0 20px 18px">Aucune session pour ce client.</div>`}
   </div>
   <div class="card"><div class="chead"><div><div class="ct">Échanges</div>
     <div class="cd">Appels, emails et réunions tracés avec ce client.</div></div>
@@ -2369,7 +2384,7 @@ function cHisto(c){
       <div class="g2">
         <div class="fld"><label>Objet *</label><input type="text" id="ecTitre" placeholder="Ex : Point de cadrage"></div>
         <div class="fld"><label>Type</label><select id="ecType">${TYPES_ECHANGE.map(t=>`<option>${t}</option>`).join("")}</select></div>
-        <div class="fld"><label>Date</label><input type="date" id="ecDate" value="2026-08-06"></div>
+        <div class="fld"><label>Date</label><input type="date" id="ecDate" value="${AUJ()}"></div>
         <div class="fld"><label>Prochaine action</label><input type="text" id="ecSuite" placeholder="Ex : relancer le 15/09"></div>
       </div>
       <div class="fld"><label>Compte rendu</label><textarea id="ecCr" style="min-height:70px"></textarea></div>
@@ -2403,7 +2418,7 @@ function vFinanceurs(){
   return head(I.financeurs,"Financeurs","OPCO, France Travail, Caisse des Dépôts et autres organismes de prise en charge",
     `<button class="btn pri" data-act="showAddFi">+ Ajouter un financeur</button>`)+
   (draft?.addFi?drawerFinanceur():"")+
-  `<div class="card pad0">${db.financeurs.length?`<table>
+  `<div class="card pad0">${db.financeurs.length?`<div class="tw" tabindex="0"><table>
     <thead><tr><th>Financeur</th><th>Type</th><th>Contact</th><th>Délai de dépôt</th><th>Documents</th><th></th></tr></thead><tbody>
     ${db.financeurs.map(f=>`<tr>
       <td><b class="lnk" data-go="financeur-detail" data-param="${f.id}">${esc(f.nom)}</b>
@@ -2413,9 +2428,9 @@ function vFinanceurs(){
       <td>${f.delai?`${f.delai} jours avant`:"—"}</td>
       <td>${(f.docs||[]).length?`<span class="tag ok">${f.docs.length}</span>`:`<span class="tag neutral">—</span>`}</td>
       <td class="right" style="white-space:nowrap">
-        <button class="btn sec sm" data-go="financeur-detail" data-param="${f.id}">Modifier</button>
+        <button class="btn sec sm" data-go="financeur-detail" data-param="${f.id}" aria-label="Modifier le financeur ${esc(f.nom)}">Modifier</button>
         <button class="btn sec sm danger" data-act="delFi" data-f="${f.id}">Supprimer</button></td></tr>`).join("")}
-    </tbody></table>`:`<div class="empty"><div class="e">${I.financeurs}</div><b>Aucun financeur</b>
+    </tbody></table></div>`:`<div class="empty"><div class="e">${I.financeurs}</div><b>Aucun financeur</b>
       <p>Référencez vos OPCO et organismes de prise en charge : leurs coordonnées et délais de dépôt serviront aux conventions et aux demandes de financement.</p>
       <button class="btn pri" data-act="showAddFi">+ Ajouter un financeur</button></div>`}</div>`;
 }
@@ -2457,7 +2472,7 @@ function vFinanceurDetail(){
   return head(I.financeurs,esc(f.nom),"Modifier les informations du financeur",
     `<span class="tag info">${esc(f.type)}</span>${f.actif?"":`<span class="tag neutral">Inactif</span>`}
      <button class="btn sec" data-go="financeurs">← Retour</button>`)+
-  `<div class="tabs">${tabs.map(([id,l,n])=>`<button class="tab ${tabFi===id?"on":""}" data-act="tabFi" data-t="${id}">${l}${n?`<span class="n">${n}</span>`:""}</button>`).join("")}</div>`+
+  `<div class="tabs" role="tablist">${tabs.map(([id,l,n])=>`<button class="tab ${tabFi===id?"on":""}" role="tab" aria-selected="${tabFi===id}" data-act="tabFi" data-t="${id}">${l}${n?`<span class="n">${n}</span>`:""}</button>`).join("")}</div>`+
   (tabFi==="infos"?fiInfos(f):fiDocs(f));
 }
 function fiInfos(f){
@@ -2546,7 +2561,7 @@ function vConf(){
   return head(I.conf,"Conformité Qualiopi","Où vous en êtes, point par point")+
   `<div class="conf"><div class="t">Conformité globale : ${c.pct} % — ${c.ok} / ${c.total} points couverts</div>
     <div class="gauges">${groupes().map(([lbl,g])=>`<div class="g ${g.ok===g.t?"done":""}"><div class="l"><span>${lbl}</span><b>${g.ok}/${g.t}</b></div>
-      <div class="bar"><i class="${g.ok===g.t?"full":""}" style="width:${g.t?Math.max(3,g.ok/g.t*100):3}%"></i></div></div>`).join("")}</div></div>
+      <div class="bar"><i class="${g.ok===g.t?"full":""}" style="width:${g.t?(g.ok/g.t*100):0}%"></i></div></div>`).join("")}</div></div>
   <div class="card"><div class="ct">Points ouverts</div><div class="cd" style="margin-bottom:10px">Ce qu'un auditeur relèverait aujourd'hui.</div>
     ${c.pts.filter(p=>!p.ok).map(p=>`<div class="todo click" data-go="${p.view}"><span class="d"></span> ${p.lbl} <span class="ind">${p.ind}</span><span class="go">Ouvrir ›</span></div>`).join("")||`<div class="todo"><span class="d ok"></span> Aucun point ouvert.</div>`}
   </div>
@@ -2569,7 +2584,7 @@ function vOrganisme(){
   (manque.length?`<div class="alert" style="background:#FFFDF6;border-color:#FDE68A">
     <div class="at" style="color:#92400E">⚠ À compléter (${manque.length})</div>
     <ul>${manque.map(m=>`<li style="color:${'#92400E'}">${m[0]}</li>`).join("")}</ul></div>`:"")+
-  `<div class="tabs">${tabs.map(([id,l,n])=>`<button class="tab ${tabO===id?"on":""}" data-act="tabO" data-t="${id}">${l}${n?`<span class="n">${n}</span>`:""}</button>`).join("")}</div>`+
+  `<div class="tabs" role="tablist">${tabs.map(([id,l,n])=>`<button class="tab ${tabO===id?"on":""}" role="tab" aria-selected="${tabO===id}" data-act="tabO" data-t="${id}">${l}${n?`<span class="n">${n}</span>`:""}</button>`).join("")}</div>`+
   ({identite:oIdentite,acces:oAcces,qualite:oQualite,docs:oDocs}[tabO])(o);
 }
 function oIdentite(o){
@@ -2711,7 +2726,7 @@ function oQualite(o){
       </div>
       <div class="acts" style="margin-top:0"><button class="btn sec" data-act="hideAddAm">Annuler</button>
         <button class="btn pri" data-act="addAm">${draft.amId?"Mettre à jour":"Enregistrer"}</button></div></div>`:""}
-    ${acts.length?`<table><thead><tr><th>Action</th><th>Type</th><th>Date</th><th>Impact</th><th>Statut</th><th></th></tr></thead><tbody>
+    ${acts.length?`<div class="tw" tabindex="0"><table><thead><tr><th>Action</th><th>Type</th><th>Date</th><th>Impact</th><th>Statut</th><th></th></tr></thead><tbody>
       ${acts.map(a=>`<tr>
         <td><b>${esc(a.objet)}</b><span class="s">${esc(a.situation||"").slice(0,90)}${(a.situation||"").length>90?"…":""}</span>
           ${a.action?`<span class="s">→ ${esc(a.action).slice(0,80)}</span>`:`<span class="s">Aucune action décrite</span>`}</td>
@@ -2722,9 +2737,9 @@ function oQualite(o){
         <td><span class="tag ${a.impact==="Critique"||a.impact==="Majeur"?"bad":a.impact==="Modéré"?"warn":"neutral"}">${esc(a.impact)}</span></td>
         <td><select class="mini-sel" data-am="${a.id}">${["À traiter","En cours","Réalisée","Efficacité vérifiée"].map(s=>`<option ${a.statut===s?"selected":""}>${s}</option>`).join("")}</select></td>
         <td class="right" style="white-space:nowrap">
-          <button class="btn sec sm" data-act="editAm" data-a="${a.id}">Modifier</button>
+          <button class="btn sec sm" data-act="editAm" data-a="${a.id}" aria-label="Modifier l'action ${esc(a.objet||"")}">Modifier</button>
           <button class="btn sec sm danger" data-act="delAm" data-a="${a.id}">✕</button></td></tr>`).join("")}
-      </tbody></table>`
+      </tbody></table></div>`
     :`<div class="empty"><div class="e">${I.conf}</div><b>Aucune action enregistrée</b>
       <p>Chaque réclamation, retour de satisfaction ou rapport de session peut donner lieu à une action. Trois ou quatre actions bien bouclées suffisent à démontrer le système.</p>
       <button class="btn pri" data-act="showAddAm">+ Nouvelle action</button></div>`}
@@ -2765,7 +2780,7 @@ function oQualite(o){
       <div class="acts" style="margin-top:0"><button class="btn sec" data-act="hideAddAb">Annuler</button>
         <button class="btn pri" data-act="addAb">${draft.abId?"Mettre à jour":"Enregistrer"}</button></div></div>`:""}
 
-    ${db.abandons.length?`<table><thead><tr><th>Stagiaire</th><th>Session</th><th>Motif</th><th>Stade</th><th>Solution</th><th>Conséquence</th><th></th></tr></thead><tbody>
+    ${db.abandons.length?`<div class="tw" tabindex="0"><table><thead><tr><th>Stagiaire</th><th>Session</th><th>Motif</th><th>Stade</th><th>Solution</th><th>Conséquence</th><th></th></tr></thead><tbody>
       ${db.abandons.map(ab=>{
         const s=SE(ab.sessionId);
         const ins=s?.inscrits.find(i=>i.id===ab.participantId);
@@ -2779,9 +2794,9 @@ function oQualite(o){
           <td>${esc(ab.solution||"—")}</td>
           <td><span class="tag ${ab.consequence==="Abandon confirmé"?"bad":ab.consequence==="Parcours terminé avec adaptation"?"ok":"warn"}">${esc(ab.consequence||"En cours")}</span></td>
           <td class="right" style="white-space:nowrap">
-            <button class="btn sec sm" data-act="editAb" data-b="${ab.id}">Modifier</button>
+            <button class="btn sec sm" data-act="editAb" data-b="${ab.id}" aria-label="Modifier l'abandon de ${esc(ab.stagiaire||"")}">Modifier</button>
             <button class="btn sec sm danger" data-act="delAb" data-b="${ab.id}">✕</button></td></tr>`;}).join("")}
-      </tbody></table>`
+      </tbody></table></div>`
     :`<div class="empty" style="padding:28px"><div class="e">✓</div>
       <b>Aucun cas enregistré</b><p>Aucun stagiaire en risque de décrochage ou en rupture de parcours. Dès qu'une absence prolongée ou un signalement survient, enregistrez-le ici : c'est ce que l'indicateur 12 attend.</p>
       <button class="btn pri" data-act="showAddAb">+ Nouveau cas</button></div>`}
@@ -2884,12 +2899,12 @@ function vAide(){
 /* ═══════════════ ACTIONS ═══════════════ */
 const ACT={
   /* créneaux */
-  slotAdd:()=>{const l=draft.creneaux[draft.creneaux.length-1]||{date:"2026-09-15",type:"Matin"};
+  slotAdd:()=>{const l=draft.creneaux[draft.creneaux.length-1]||{date:dateProchaine(),type:"Matin"};
     const nx=l.type==="Matin"?STD[1]:STD[0];
     draft.creneaux.push({date:l.date,type:nx[0],d:nx[1],f:nx[2]});render();},
   slotDel:b=>{draft.creneaux.splice(+b.dataset.i,1);render();},
   slotApply:()=>{draft.creneaux=draft.creneaux.map(c=>{const s=STD.find(x=>x[0]===c.type);return s?{...c,d:s[1],f:s[2]}:c;});render();toast("Horaires standards appliqués");},
-  slotGen2:()=>{const j1=draft.creneaux[0]?.date||"2026-09-15";const d=new Date(j1+"T12:00:00Z");d.setUTCDate(d.getUTCDate()+1);
+  slotGen2:()=>{const j1=draft.creneaux[0]?.date||dateProchaine();const d=new Date(j1+"T12:00:00Z");d.setUTCDate(d.getUTCDate()+1);
     draft.creneaux=[j1,d.toISOString().slice(0,10)].flatMap(day=>STD.slice(0,2).map(([t,a,b])=>({date:day,type:t,d:a,f:b})));render();toast("2 jours générés");},
 
   sessionCreate:()=>{
@@ -3002,6 +3017,28 @@ const ACT={
         toast(r.existait?"Apprenant déjà présent — rattaché":"Apprenant ajouté au répertoire");
       }catch(e){ toast("⚠ Non enregistré : "+e.message); }
     })();},
+  /* Suppression d'une session — les fiches liées (créneaux, inscriptions,
+     émargements) partent avec elle dans la corbeille Notion. Une session qui
+     porte des preuves d'audit demande de recopier son titre. */
+  delSession:b=>{const id=b.dataset.s, s=SE(id); if(!s) return;
+    const signatures=emSigned(s);
+    const grave = s.statut==="Terminée" || signatures>0;
+    const detail=[s.inscrits.length&&`${s.inscrits.length} inscription(s)`,
+      s.creneaux.length&&`${s.creneaux.length} créneau(x)`,
+      signatures&&`${signatures} signature(s) d'émargement`].filter(Boolean).join(", ");
+    if(grave){
+      const saisie=prompt(`Cette session porte des preuves d'audit Qualiopi`
+        +(detail?` (${detail})`:"")+`.\n\nPour confirmer, recopiez son titre :\n\n${s.titre}`);
+      if(saisie===null) return;
+      if(saisie.trim()!==s.titre.trim()){ toast("Titre incorrect — suppression annulée"); return; }
+    }else if(!confirm(`Supprimer « ${s.titre} » ?`
+      +(detail?`\n\n${detail} seront archivés avec elle.`:""))) return;
+    (async()=>{ try{
+      await api("sessions",{action:"supprimer",id,force:grave});
+      db.sessions=db.sessions.filter(x=>x.id!==id);
+      if(route.view==="session-detail"&&route.param===id) go("sessions"); else render();
+      toast("Session supprimée — récupérable dans la corbeille Notion");
+    }catch(e){ toast("⚠ "+e.message); } })();},
   delAppr:b=>{const id=b.dataset.a;
     if(db.sessions.some(s=>s.inscrits.some(i=>i.aId===id))){toast("Retirez-le d'abord de ses sessions");return;}
     (async()=>{ try{

@@ -122,5 +122,41 @@ module.exports = handler(async (req, res) => {
     return res.status(200).json({ ok: true, ...info });
   }
 
+  /* ── Suppression d'une session ──
+     Notion archive (corbeille) : rien n'est détruit, tout reste restaurable 30 jours.
+     On archive d'abord les enfants (créneaux, inscriptions, émargements) pour ne pas
+     laisser de fiches orphelines rattachées à une session disparue.
+     Une session terminée porte les preuves de l'audit Qualiopi : on exige `force`. */
+  if (action === "supprimer") {
+    const { id, force = false } = body;
+    if (!id) return res.status(400).json({ erreur: "Identifiant manquant" });
+
+    const page = await notion(`/pages/${id}`);
+    const statut = P.select(page.properties, "Statut");
+    if (statut === "Terminée" && !force) {
+      return res.status(409).json({
+        erreur: "Session terminée : elle porte les preuves de l'audit. Confirmation explicite requise.",
+        confirmation: true,
+      });
+    }
+
+    const [creneaux, inscriptions, emargements] = await Promise.all([
+      queryAll(DB.creneaux,     { filter: { property: "Session",     relation: { contains: id } } }),
+      queryAll(DB.participants, { filter: { property: "📅 Sessions", relation: { contains: id } } }),
+      queryAll(DB.emargements,  { filter: { property: "Session",     relation: { contains: id } } }),
+    ]);
+
+    for (const p of [...emargements, ...inscriptions, ...creneaux]) {
+      await notion(`/pages/${p.id}`, "PATCH", { archived: true });
+    }
+    await notion(`/pages/${id}`, "PATCH", { archived: true });
+
+    return res.status(200).json({
+      ok: true,
+      archives: { creneaux: creneaux.length, inscriptions: inscriptions.length,
+                  emargements: emargements.length },
+    });
+  }
+
   return res.status(400).json({ erreur: "Action inconnue" });
 });
