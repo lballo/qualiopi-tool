@@ -31,22 +31,32 @@ async function inscrire(sessionId, apprenant, options = {}) {
   return { id: page.id.replace(/-/g, ""), existait: false };
 }
 
-/* Trouve ou crée un apprenant à partir d'une ligne importée */
+/* Met une page Apprenant au format attendu par inscrire() */
+const depuisPage = p => ({
+  id: p.id.replace(/-/g, ""), cree: false,
+  nom: P.text(p.properties, "Nom") || P.title(p.properties, "Nom complet"),
+  prenom: P.text(p.properties, "Prénom"),
+  entrepriseId: P.rel1(p.properties, "Entreprise"),
+});
+
+/* Trouve ou crée un apprenant à partir d'une ligne importée.
+   Dédoublonnage sur l'email, puis repli sur le nom complet : sans ce repli,
+   une liste sans emails recrée les mêmes personnes à chaque import. */
 async function apprenantDeLigne(ligne, entrepriseId) {
+  const entId = ligne.entrepriseId || entrepriseId || "";
+
   if (ligne.email) {
     const r = await queryAll(DB.apprenants, {
       filter: { property: "Email", email: { equals: ligne.email } },
     });
-    if (r[0]) {
-      const p = r[0];
-      return {
-        id: p.id.replace(/-/g, ""), cree: false,
-        nom: P.text(p.properties, "Nom") || P.title(p.properties, "Nom complet"),
-        prenom: P.text(p.properties, "Prénom"),
-        entrepriseId: P.rel1(p.properties, "Entreprise"),
-      };
-    }
+    if (r[0]) return depuisPage(r[0]);
+  } else {
+    const r = await queryAll(DB.apprenants, {
+      filter: { property: "Nom complet", title: { equals: nomComplet(ligne) } },
+    });
+    if (r[0]) return depuisPage(r[0]);
   }
+
   const page = await notion("/pages", "POST", {
     parent: { database_id: DB.apprenants },
     properties: {
@@ -56,10 +66,10 @@ async function apprenantDeLigne(ligne, entrepriseId) {
       "Email": W.email(ligne.email),
       "Téléphone": W.phone(ligne.tel),
       "Fonction": W.text(ligne.fonction),
-      "Entreprise": W.rel(entrepriseId ? [entrepriseId] : []),
+      "Entreprise": W.rel(entId ? [entId] : []),
     },
   });
-  return { id: page.id.replace(/-/g, ""), cree: true, nom: ligne.nom, prenom: ligne.prenom, entrepriseId };
+  return { id: page.id.replace(/-/g, ""), cree: true, nom: ligne.nom, prenom: ligne.prenom, entrepriseId: entId };
 }
 
 module.exports = handler(async (req, res) => {
@@ -89,14 +99,16 @@ module.exports = handler(async (req, res) => {
     const { sessionId, lignes = [], entrepriseId, options = {} } = body;
     if (!sessionId) return res.status(400).json({ erreur: "Session manquante" });
     let crees = 0, rattaches = 0, inscriptions = 0;
+    const ids = [];
     for (const ligne of lignes) {
       if (!ligne.nom?.trim()) continue;
       const a = await apprenantDeLigne(ligne, entrepriseId);
       a.cree ? crees++ : rattaches++;
       const r = await inscrire(sessionId, a, options);
       if (!r.existait) inscriptions++;
+      ids.push(r.id);
     }
-    return res.status(200).json({ ok: true, crees, rattaches, inscriptions });
+    return res.status(200).json({ ok: true, crees, rattaches, inscriptions, ids });
   }
 
   /* ── Mise à jour d'une inscription ── */

@@ -517,6 +517,7 @@ async function recharger(){
 }
 let route = {view:"dash", param:null};
 let draft = null;   // état des formulaires en cours
+let enCoursImport = false;   // garde anti double-soumission de l'import
 
 /* ═══════════════ OUTILS ═══════════════ */
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
@@ -882,7 +883,7 @@ function tabApprenants(s){
           : `<span class="s">Lien non disponible</span>`}</td></tr>
     </tbody></table></div>`:`<div class="empty"><div class="e">${I.apprenants}</div><b>Aucun apprenant inscrit</b>
       <p>Importez une liste ou piochez dans votre répertoire.</p>
-      <button class="btn pri" data-go="import">+ Importer des apprenants</button></div>`}
+      <button class="btn pri" data-go="import" data-param="${s.id}">+ Importer des apprenants</button></div>`}
   </div>
   <div class="card"><div class="chead"><div><div class="ct">Émargement formateur <span class="ind">IND 9</span></div>
     <div class="cd">${s.emF.length&&s.emF.every(Boolean)
@@ -1327,16 +1328,36 @@ afterRender.inscription=()=>{
 
 /* ═══════════════ IMPORT ═══════════════ */
 function vImport(){
-  if(!draft) draft={txt:"",fichier:null};
+  if(!draft) draft={txt:"",fichier:null,sessionId:route.param||""};
+  if(draft.sessionId===undefined) draft.sessionId=route.param||"";
+  const sess=draft.sessionId?SE(draft.sessionId):null;
   const rows=parseRows(draft.txt);
   const valides=rows.filter(r=>r.nom);
   const neuf=valides.filter(r=>!r.known).length, connu=valides.length-neuf;
   const invalides=rows.filter(r=>!r.nom).length;
+  /* Avec une session, les personnes déjà au répertoire sont traitées aussi :
+     elles n'ont pas besoin d'être recréées, mais bien d'être inscrites. */
+  const aTraiter=sess?valides.length:neuf;
 
-  return head(I.import,"Importer des apprenants",
-    "Ajoutez plusieurs personnes d'un coup au répertoire, depuis un fichier ou un copier-coller",
-    `<button class="btn sec" data-go="apprenants">← Retour au répertoire</button>`)+
-  `<div class="card"><div class="ct">Depuis un fichier</div>
+  return head(I.import, sess?"Importer et inscrire":"Importer des apprenants",
+    sess
+      ? `Les personnes importées rejoignent le répertoire et sont inscrites à « ${esc(sess.titre)} » — c'est l'inscription qui génère leurs liens.`
+      : "Ajoutez plusieurs personnes d'un coup au répertoire, depuis un fichier ou un copier-coller",
+    sess
+      ? `<button class="btn sec" data-go="session-detail" data-param="${sess.id}">← Retour à la session</button>`
+      : `<button class="btn sec" data-go="apprenants">← Retour au répertoire</button>`)+
+  `<div class="card"><div class="ct">Destination</div>
+    <div class="cd" style="margin-bottom:14px">Le répertoire ne porte que l'identité des personnes. Les liens stagiaires
+      (émargement, positionnement, évaluation, satisfaction, éval à froid, espace stagiaire) naissent de l'inscription à une session.
+      Sans session choisie ici, vous devrez les inscrire ensuite depuis l'onglet Participants.</div>
+    <div class="fld"><label>Inscrire à la session</label>
+      <select id="impSession">
+        <option value="">— Répertoire seulement, aucune inscription —</option>
+        ${db.sessions.map(s=>`<option value="${s.id}"${s.id===draft.sessionId?" selected":""}>${esc(s.titre)}${s.dateDebut?" — "+esc(s.dateDebut):""}</option>`).join("")}
+      </select></div>
+  </div>
+
+  <div class="card"><div class="ct">Depuis un fichier</div>
     <div class="cd" style="margin-bottom:14px">CSV ou Excel enregistré en CSV. La première ligne peut contenir les entêtes,
       elle est reconnue et ignorée.</div>
     <label class="up depot ${draft.fichier?"filled":""}" id="zoneDepot" style="display:block;padding:26px;cursor:pointer">
@@ -1361,20 +1382,25 @@ function vImport(){
     ${rows.length?`<div class="tw" tabindex="0"><table><thead><tr><th>Nom</th><th>Prénom</th><th>Email</th><th>Entreprise</th><th>Statut</th></tr></thead><tbody>
       ${rows.map(r=>`<tr><td><b>${esc(r.nom||"—")}</b></td><td>${esc(r.prenom)}</td><td>${esc(r.email||"—")}</td>
         <td>${esc(r.entreprise||"—")}</td>
-        <td><span class="tag ${!r.nom?"bad":r.known?"warn":"ok"}">${!r.nom?"Ignorée — nom manquant":r.known?"Déjà au répertoire":"Nouvel apprenant"}</span></td></tr>`).join("")}
+        <td><span class="tag ${!r.nom?"bad":(r.known&&!sess)?"warn":"ok"}">${!r.nom?"Ignorée — nom manquant":r.known?(sess?"Déjà au répertoire — à inscrire":"Déjà au répertoire"):(sess?"Nouvel apprenant — à inscrire":"Nouvel apprenant")}</span></td></tr>`).join("")}
       </tbody></table></div>
       <div style="padding:14px 20px" class="note"><b>${neuf}</b> apprenant${neuf>1?"s":""} à créer ·
-        <b>${connu}</b> déjà présent${connu>1?"s":""}, ignoré${connu>1?"s":""} pour éviter les doublons
+        <b>${connu}</b> déjà présent${connu>1?"s":""}${sess?", rattaché"+(connu>1?"s":""):", ignoré"+(connu>1?"s":"")+" pour éviter les doublons"}
+        ${sess?` · <b>${valides.length}</b> inscription${valides.length>1?"s":""} à « ${esc(sess.titre)} »`:""}
         ${invalides?` · <b>${invalides}</b> ligne${invalides>1?"s":""} sans nom, non importée${invalides>1?"s":""}`:""}.
-        Le rapprochement se fait sur l'email.</div>`
+        Le rapprochement se fait sur l'email, puis sur le nom complet.</div>`
       :`<div class="empty"><div class="e">${I.import}</div><b>Rien à importer</b>
         <p>Choisissez un fichier ou collez des lignes pour voir ce qui sera créé.</p></div>`}
   </div>
 
   <div class="acts"><button class="btn sec" data-go="apprenants">Annuler</button>
-    <button class="btn pri" data-act="doImport" ${neuf?"":"disabled"}>Créer ${neuf} apprenant${neuf>1?"s":""}</button></div>`;
+    <button class="btn pri" data-act="doImport" ${aTraiter?"":"disabled"}>${sess
+      ?`Créer et inscrire ${aTraiter} apprenant${aTraiter>1?"s":""}`
+      :`Créer ${aTraiter} apprenant${aTraiter>1?"s":""}`}</button></div>`;
 }
 afterRender.import=()=>{
+  const sl=document.getElementById("impSession");
+  if(sl) sl.onchange=()=>{draft.sessionId=sl.value;render();};
   const t=document.getElementById("paste");
   if(t) t.oninput=()=>{draft.txt=t.value;
     clearTimeout(window.__impT); window.__impT=setTimeout(render,400);};
@@ -3123,30 +3149,57 @@ const ACT={
   qrAppr:()=>toast("Les QR codes seront générés dans la version connectée"),
 
   /* import */
-  doImport:()=>{
-    const rows=parseRows(draft.txt).filter(r=>r.nom && !r.known);
-    if(!rows.length){toast("Aucun nouvel apprenant à créer");return;}
-    toast(`Création de ${rows.length} apprenant(s)…`);
+  doImport:b=>{
+    if(enCoursImport) return;
+    const sess=draft.sessionId?SE(draft.sessionId):null;
+    /* Avec une session : on traite toutes les lignes valides, y compris les
+       personnes déjà au répertoire — ce sont elles qui attendent une inscription.
+       Sans session : on ne recrée pas ce qui existe déjà. */
+    const rows=parseRows(draft.txt).filter(r=>r.nom && (sess || !r.known));
+    if(!rows.length){toast(sess?"Aucune ligne exploitable":"Aucun nouvel apprenant à créer");return;}
+    const entId=r=>{const c=db.clients.find(x=>x.nom.toLowerCase()===(r.entreprise||"").toLowerCase());
+      return c?c.id:"";};
+    enCoursImport=true;
+    if(b){b.disabled=true;b.textContent="Enregistrement…";}
     (async()=>{
-      let crees=0, echecs=0;
-      for(const r of rows){
-        const ent=db.clients.find(c=>c.nom.toLowerCase()===(r.entreprise||"").toLowerCase());
-        try{
-          const rep=await api("apprenants",{action:"creer",apprenant:{
-            nom:r.nom,prenom:r.prenom,email:r.email,tel:r.tel,fonction:r.fonction,
-            entrepriseId:ent?ent.id:""}});
-          if(!rep.existait){
-            db.apprenants.push({id:rep.id,nom:r.nom,prenom:r.prenom,email:r.email,tel:r.tel,
-              fonction:r.fonction,entreprise:ent?ent.nom:"",entrepriseId:ent?ent.id:"",notes:""});
-            crees++;
+      try{
+        if(sess){
+          /* Un seul appel : l'API crée ou retrouve chaque apprenant, puis crée
+             la ligne d'inscription dans 👥 Participants. Rien n'est annoncé
+             comme réussi tant que cette réponse n'est pas revenue. */
+          const r=await api("inscriptions",{action:"importer",
+            sessionId:sess.id,
+            entrepriseId:sess.clientId||"",
+            lignes:rows.map(x=>({nom:x.nom,prenom:x.prenom,email:x.email,tel:x.tel,
+              fonction:x.fonction,entrepriseId:entId(x)}))});
+          await charger();
+          draft=null; go("session-detail",sess.id);
+          toast(`${r.inscriptions} inscription(s) créée(s) · ${r.crees} apprenant(s) créé(s) · ${r.rattaches} rattaché(s)`);
+        }else{
+          let crees=0, echecs=0;
+          for(const r of rows){
+            const ent=entId(r);
+            try{
+              const rep=await api("apprenants",{action:"creer",apprenant:{
+                nom:r.nom,prenom:r.prenom,email:r.email,tel:r.tel,fonction:r.fonction,
+                entrepriseId:ent}});
+              if(!rep.existait){
+                db.apprenants.push({id:rep.id,nom:r.nom,prenom:r.prenom,email:r.email,tel:r.tel,
+                  fonction:r.fonction,entreprise:r.entreprise||"",entrepriseId:ent,notes:""});
+                crees++;
+              }
+            }catch(e){ echecs++; }
           }
-        }catch(e){ echecs++; }
-      }
-      db.apprenants.sort((a,b)=>(a.nom||"").localeCompare(b.nom||""));
-      draft=null; go("apprenants");
-      toast(echecs
-        ? `${crees} apprenant(s) créé(s) · ${echecs} en échec`
-        : `${crees} apprenant(s) ajouté(s) au répertoire`);
+          db.apprenants.sort((a,b)=>(a.nom||"").localeCompare(b.nom||""));
+          draft=null; go("apprenants");
+          toast(echecs
+            ? `${crees} apprenant(s) créé(s) · ${echecs} en échec`
+            : `${crees} apprenant(s) ajouté(s) au répertoire — pensez à les inscrire à une session`);
+        }
+      }catch(e){
+        toast("⚠ Non enregistré : "+e.message);
+        render();
+      }finally{ enCoursImport=false; }
     })();},
   modeleCsv:()=>{
     const csv="nom;prenom;email;telephone;fonction;entreprise\n"
