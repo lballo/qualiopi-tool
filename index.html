@@ -802,11 +802,9 @@ function vNewSession(){
      ${db.financeurs.map(f=>`<option value="${f.id}" ${draft.financeurId===f.id?"selected":""}>${esc(f.nom)}</option>`).join("")}</select>
      <div class="h">Sert à la demande de prise en charge et rappelle le délai de dépôt.</div></div>
    <div class="fld"><label>Convocations des stagiaires <span class="ind">IND 9</span></label>
-     <select data-d="convocations">${["Je m'en charge","Gérées par un autre organisme"].map(v=>`<option ${draft.convocations===v?"selected":""}>${v}</option>`).join("")}</select>
-     <div class="h">« Je m'en charge » autorise l'envoi automatique des convocations 10 jours avant le démarrage.</div></div>
-   ${draft.convocations==="Gérées par un autre organisme"?`<div class="fld"><label>Organisme convocateur</label>
-     <input type="text" data-d="organismeConvocateur" value="${esc(draft.organismeConvocateur)}" placeholder="Ex : Institut François Bocquet">
-     <div class="h">Nom porté au dossier : l'auditeur verra qui a convoqué les stagiaires.</div></div>`:""}
+     <label class="ck" style="max-width:none"><input type="checkbox" data-dck="convocations" ${draft.convocations==="Je m'en charge"?"checked":""}>
+       Envoyer automatiquement les convocations</label>
+     <div class="h">Les convocations partent 10 jours avant le démarrage. Décochez si un autre organisme s'en charge.</div></div>
    <div class="fld"><label>Modalités pédagogiques <span class="ind">IND 7</span></label>
      <div class="h" style="margin:0 0 8px">Sélectionnez une ou plusieurs modalités</div>
      <div class="checks">${["Présentiel","Distanciel synchrone","Distanciel asynchrone","En situation de travail (AFEST)"].map(m=>
@@ -831,6 +829,9 @@ function vNewSession(){
 }
 afterRender["new-session"]=()=>{
   $$("[data-d]").forEach(el=>el.onchange=()=>{draft[el.dataset.d]=el.value;render();});
+  $$("[data-dck]").forEach(el=>el.onchange=()=>{
+    draft[el.dataset.dck]=el.checked?"Je m'en charge":"Gérées par un autre organisme";
+    if(el.checked) draft.organismeConvocateur=""; render();});
   $$("[data-mod]").forEach(el=>el.onchange=()=>{
     const m=el.dataset.mod;
     draft.modalites=el.checked?[...draft.modalites,m]:draft.modalites.filter(x=>x!==m);});
@@ -856,26 +857,24 @@ function vSessionDetail(){
   `<div class="tabs" role="tablist">${tabs.map(([id,l,n])=>`<button class="tab ${tabSession===id?"on":""}" role="tab" aria-selected="${tabSession===id}" data-act="tab" data-t="${id}">${l}${n!==null?`<span class="n">${n}</span>`:""}</button>`).join("")}</div>`+
   ({apprenants:tabApprenants,besoin:tabBesoin,planning:tabPlanning,documents:tabDocuments,rapport:tabRapport}[tabSession])(s);
 }
-/* Qui convoque les stagiaires de cette session (IND 9) */
+/* Envoi des convocations pour cette session (IND 9) */
 function blocConvocations(s){
-  const mien = s.convocations==="Je m'en charge";
-  const tiers = s.convocations==="Gérées par un autre organisme";
-  const restants = s.inscrits.filter(i=>!i.convoc).length;
-  const corps = tiers
-    ? `<b>Convocations gérées par ${esc(s.organismeConvocateur||"un autre organisme")}</b>
-       <span class="s">Aucun envoi automatique. Les stagiaires sont convoqués par ce tiers.</span>`
-    : mien
-      ? `<b>Vous convoquez les stagiaires de cette session</b>
-         <span class="s">${restants?`${restants} convocation${restants>1?"s":""} partira${restants>1?"ont":""} automatiquement 10 jours avant le démarrage.`:"Toutes les convocations ont été envoyées."}</span>`
-      : `<b>Convocations non programmées</b>
-         <span class="s">Tant que ce choix n'est pas fait, aucune convocation ne partira pour cette session.</span>`;
-  return `<div class="ct-row ${mien?"":tiers?"neutral":"warn"}" style="display:flex;gap:12px;align-items:flex-start;padding:12px 14px;border:1px solid var(--bd,#e5e1dc);border-radius:8px;background:${tiers?"#f6f5f4":mien?"#f4f9f5":"#fdf6ec"}">
-    <div class="ct-txt" style="flex:1">${corps}
-      ${tiers?`<div style="margin-top:8px"><input type="text" data-conv="organisme" data-s="${s.id}" value="${esc(s.organismeConvocateur||"")}" placeholder="Nom de l'organisme convocateur" style="max-width:320px"></div>`:""}
-    </div>
-    <div style="display:flex;gap:8px;flex-wrap:wrap">
-      <button class="btn ${mien?"sec":"pri"} sm" data-act="convSession" data-s="${s.id}" data-v="mien">Je m'en charge</button>
-      <button class="btn ${tiers?"sec":"pri"} sm" data-act="convSession" data-s="${s.id}" data-v="tiers">Autre organisme</button>
+  const actif   = s.convocations==="Je m'en charge";
+  const inscrits= s.inscrits.length;
+  const restants= s.inscrits.filter(i=>!i.convoc).length;
+  const message = !inscrits
+    ? "Aucun stagiaire inscrit pour l'instant. Le réglage s'appliquera dès la première inscription."
+    : actif
+      ? (restants
+          ? `${restants} convocation${restants>1?"s":""} partira${restants>1?"ont":""} automatiquement 10 jours avant le démarrage.`
+          : `Les ${inscrits} convocation${inscrits>1?"s ont":" a"} été envoyée${inscrits>1?"s":""}.`)
+      : "Aucune convocation ne partira pour cette session.";
+  return `<div style="display:flex;gap:14px;align-items:flex-start;padding:12px 14px;border:1px solid #e5e1dc;border-radius:8px;background:${!inscrits?"#faf9f8":actif?"#f4f9f5":"#f6f5f4"}">
+    <label class="ck" style="max-width:none;margin:0;${inscrits?"":"opacity:.5;cursor:not-allowed"}">
+      <input type="checkbox" data-act="convToggle" data-s="${s.id}" ${actif?"checked":""} ${inscrits?"":"disabled"}>
+      Envoyer les convocations</label>
+    <div class="ct-txt" style="flex:1"><span class="s">${message}</span>
+      ${!actif&&inscrits?`<div style="margin-top:8px"><input type="text" data-conv="organisme" data-s="${s.id}" value="${esc(s.organismeConvocateur||"")}" placeholder="Qui convoque ? (facultatif, utile en audit)" style="max-width:320px"></div>`:""}
     </div>
   </div>`;
 }
@@ -893,7 +892,7 @@ function tabApprenants(s){
     ${s.inscrits.map((i,ii)=>{const a=A(i.aId);return `<tr>
       <td><div class="who"><span class="av">${initials(a)}</span><span><b>${esc(fullName(a))}</b><span class="s">${esc(a.email)}</span></span></div></td>
       <td>${s.convocations==="Gérées par un autre organisme"
-        ?`<span class="tag neutral" title="${esc(s.organismeConvocateur||"Autre organisme")} convoque les stagiaires de cette session">Autre organisme</span>`
+        ?`<span class="tag neutral" title="${esc(s.organismeConvocateur||"Envoi désactivé pour cette session")}">Non envoyée</span>`
         :`<button class="tag ${i.convoc?"ok":"warn"}" data-act="convocLigne" data-s="${s.id}" data-a="${a.id}"
             title="${i.convoc?`Envoyée le ${fmtD(i.convocDate)} — cliquez pour renvoyer`:"Cliquez pour marquer envoyée"}">${i.convoc?"✓ Envoyée":"À envoyer"}</button>`}</td>
       <td><button class="tag ${i.pos?"ok":"neutral"}" data-act="togPos" data-i="${ii}">${i.pos?"✓ Complété":"À compléter"}</button></td>
@@ -3169,12 +3168,12 @@ const ACT={
     i.attestation=!i.attestation;render();
     if(i.id) pousser("inscriptions",{action:"maj",id:i.id,champs:{attestation:i.attestation}},
       i.attestation?"Attestation marquée remise":"Attestation retirée").catch(()=>{});},
-  convSession:b=>{const s=SE(b.dataset.s);
-    s.convocations=b.dataset.v==="mien"?"Je m'en charge":"Gérées par un autre organisme";
-    if(s.convocations==="Je m'en charge") s.organismeConvocateur="";
+  convToggle:b=>{const s=SE(b.dataset.s);
+    s.convocations=b.checked?"Je m'en charge":"Gérées par un autre organisme";
+    if(b.checked) s.organismeConvocateur="";
     render();
     pousser("sessions",{action:"maj",id:s.id,champs:{convocations:s.convocations,organismeConvocateur:s.organismeConvocateur||""}},
-      s.convocations==="Je m'en charge"?"Convocations programmées pour cette session":"Convocations confiées à un autre organisme").catch(()=>{});},
+      b.checked?"Convocations activées pour cette session":"Convocations désactivées pour cette session").catch(()=>{});},
 
   convocLigne:b=>{const s=SE(b.dataset.s),a=A(b.dataset.a);
     const i=s.inscrits.find(x=>x.aId===a.id);
