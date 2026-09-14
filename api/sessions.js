@@ -58,6 +58,8 @@ module.exports = handler(async (req, res) => {
         "Entreprise": W.rel(s.clientId ? [s.clientId] : []),
         "👩‍🏫 Formateur·rice": W.rel(s.formateurId ? [s.formateurId] : []),
         "💶 Financeur": W.rel(s.financeurId ? [s.financeurId] : []),
+        "Convocations": W.select(s.convocations || "Je m'en charge"),
+        "Organisme convocateur": W.text(s.organismeConvocateur || ""),
       },
     });
     const sessionId = page.id.replace(/-/g, "");
@@ -88,6 +90,8 @@ module.exports = handler(async (req, res) => {
       statut:       v => ({ "Statut": W.select(v) }),
       notes:        v => ({ "Notes internes": W.text(v) }),
       convocation:  v => ({ "Convocation envoyée": W.check(v) }),
+      convocations: v => ({ "Convocations": W.select(v) }),
+      organismeConvocateur: v => ({ "Organisme convocateur": W.text(v) }),
       formationId:  v => ({ "Formation": W.rel(v ? [v] : []) }),
       clientId:     v => ({ "Entreprise": W.rel(v ? [v] : []) }),
       formateurId:  v => ({ "👩‍🏫 Formateur·rice": W.rel(v ? [v] : []) }),

@@ -388,6 +388,8 @@ module.exports = handler(async (req, res) => {
       conventionFichier: P.files(x, "Convention signée")[0]?.nom || null,
       conventionUrl: P.files(x, "Convention signée")[0]?.url || "",
       convocation: P.check(x, "Convocation envoyée"),
+      convocations: P.select(x, "Convocations"),
+      organismeConvocateur: P.text(x, "Organisme convocateur"),
       besoin: {
         contexte: P.text(x, "Analyse du besoin — contexte"),
         objectifs: P.text(x, "Objectifs attendus par le client"),

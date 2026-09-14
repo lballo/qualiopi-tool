@@ -777,6 +777,7 @@ const STD=[["Matin","09:00","12:30"],["Après-midi","13:30","17:00"],["Soirée",
 function vNewSession(){
   if(!draft) draft={formationId:db.formations[0].id,clientId:db.clients[0].id,formateurId:db.formateurs[0].id,
     type:"INTRA",code:String(db.sessions.length+1),lieu:"",titre:"",financeurId:"",modalites:["Présentiel"],
+    convocations:"Je m'en charge",organismeConvocateur:"",
     creneaux:(j=>[{date:j,type:"Matin",d:"09:00",f:"12:30"},{date:j,type:"Après-midi",d:"13:30",f:"17:00"}])(dateProchaine())};
   return head(I.sessionNew,"Nouvelle session","Créez une session de formation et son planning",
     `<button class="btn sec" data-go="sessions">← Retour</button>`)+
@@ -800,6 +801,12 @@ function vNewSession(){
      <select data-d="financeurId"><option value="">— Aucun / fonds propres —</option>
      ${db.financeurs.map(f=>`<option value="${f.id}" ${draft.financeurId===f.id?"selected":""}>${esc(f.nom)}</option>`).join("")}</select>
      <div class="h">Sert à la demande de prise en charge et rappelle le délai de dépôt.</div></div>
+   <div class="fld"><label>Convocations des stagiaires <span class="ind">IND 9</span></label>
+     <select data-d="convocations">${["Je m'en charge","Gérées par un autre organisme"].map(v=>`<option ${draft.convocations===v?"selected":""}>${v}</option>`).join("")}</select>
+     <div class="h">« Je m'en charge » autorise l'envoi automatique des convocations 10 jours avant le démarrage.</div></div>
+   ${draft.convocations==="Gérées par un autre organisme"?`<div class="fld"><label>Organisme convocateur</label>
+     <input type="text" data-d="organismeConvocateur" value="${esc(draft.organismeConvocateur)}" placeholder="Ex : Institut François Bocquet">
+     <div class="h">Nom porté au dossier : l'auditeur verra qui a convoqué les stagiaires.</div></div>`:""}
    <div class="fld"><label>Modalités pédagogiques <span class="ind">IND 7</span></label>
      <div class="h" style="margin:0 0 8px">Sélectionnez une ou plusieurs modalités</div>
      <div class="checks">${["Présentiel","Distanciel synchrone","Distanciel asynchrone","En situation de travail (AFEST)"].map(m=>
@@ -849,6 +856,30 @@ function vSessionDetail(){
   `<div class="tabs" role="tablist">${tabs.map(([id,l,n])=>`<button class="tab ${tabSession===id?"on":""}" role="tab" aria-selected="${tabSession===id}" data-act="tab" data-t="${id}">${l}${n!==null?`<span class="n">${n}</span>`:""}</button>`).join("")}</div>`+
   ({apprenants:tabApprenants,besoin:tabBesoin,planning:tabPlanning,documents:tabDocuments,rapport:tabRapport}[tabSession])(s);
 }
+/* Qui convoque les stagiaires de cette session (IND 9) */
+function blocConvocations(s){
+  const mien = s.convocations==="Je m'en charge";
+  const tiers = s.convocations==="Gérées par un autre organisme";
+  const restants = s.inscrits.filter(i=>!i.convoc).length;
+  const corps = tiers
+    ? `<b>Convocations gérées par ${esc(s.organismeConvocateur||"un autre organisme")}</b>
+       <span class="s">Aucun envoi automatique. Les stagiaires sont convoqués par ce tiers.</span>`
+    : mien
+      ? `<b>Vous convoquez les stagiaires de cette session</b>
+         <span class="s">${restants?`${restants} convocation${restants>1?"s":""} partira${restants>1?"ont":""} automatiquement 10 jours avant le démarrage.`:"Toutes les convocations ont été envoyées."}</span>`
+      : `<b>Convocations non programmées</b>
+         <span class="s">Tant que ce choix n'est pas fait, aucune convocation ne partira pour cette session.</span>`;
+  return `<div class="ct-row ${mien?"":tiers?"neutral":"warn"}" style="display:flex;gap:12px;align-items:flex-start;padding:12px 14px;border:1px solid var(--bd,#e5e1dc);border-radius:8px;background:${tiers?"#f6f5f4":mien?"#f4f9f5":"#fdf6ec"}">
+    <div class="ct-txt" style="flex:1">${corps}
+      ${tiers?`<div style="margin-top:8px"><input type="text" data-conv="organisme" data-s="${s.id}" value="${esc(s.organismeConvocateur||"")}" placeholder="Nom de l'organisme convocateur" style="max-width:320px"></div>`:""}
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn ${mien?"sec":"pri"} sm" data-act="convSession" data-s="${s.id}" data-v="mien">Je m'en charge</button>
+      <button class="btn ${tiers?"sec":"pri"} sm" data-act="convSession" data-s="${s.id}" data-v="tiers">Autre organisme</button>
+    </div>
+  </div>`;
+}
+
 let selApprenants=[];
 function tabApprenants(s){
   const libres=db.apprenants.filter(a=>!s.inscrits.some(i=>i.aId===a.id));
@@ -857,11 +888,14 @@ function tabApprenants(s){
     <div style="padding:18px 20px;display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap">
       <div><div class="ct">Apprenants inscrits</div><div class="cd">Les signatures proviennent des liens stagiaire et formateur : elles ne se saisissent pas ici.</div></div>
     </div>
+    <div style="padding:0 20px 18px">${blocConvocations(s)}</div>
     ${s.inscrits.length?`<div class="tw" tabindex="0"><table><thead><tr><th>Apprenant</th><th>Convocation</th><th>Positionnement</th><th>Émargement (${s.creneaux.length} créneaux)</th><th>Évaluation</th><th>Satisfaction</th><th>Attestation</th><th>À froid</th><th></th></tr></thead><tbody>
     ${s.inscrits.map((i,ii)=>{const a=A(i.aId);return `<tr>
       <td><div class="who"><span class="av">${initials(a)}</span><span><b>${esc(fullName(a))}</b><span class="s">${esc(a.email)}</span></span></div></td>
-      <td><button class="tag ${i.convoc?"ok":"warn"}" data-act="convocLigne" data-s="${s.id}" data-a="${a.id}"
-            title="${i.convoc?`Envoyée le ${fmtD(i.convocDate)}`:"Cliquez pour marquer envoyée"}">${i.convoc?"✓ Envoyée":"À envoyer"}</button></td>
+      <td>${s.convocations==="Gérées par un autre organisme"
+        ?`<span class="tag neutral" title="${esc(s.organismeConvocateur||"Autre organisme")} convoque les stagiaires de cette session">Autre organisme</span>`
+        :`<button class="tag ${i.convoc?"ok":"warn"}" data-act="convocLigne" data-s="${s.id}" data-a="${a.id}"
+            title="${i.convoc?`Envoyée le ${fmtD(i.convocDate)} — cliquez pour renvoyer`:"Cliquez pour marquer envoyée"}">${i.convoc?"✓ Envoyée":"À envoyer"}</button>`}</td>
       <td><button class="tag ${i.pos?"ok":"neutral"}" data-act="togPos" data-i="${ii}">${i.pos?"✓ Complété":"À compléter"}</button></td>
       <td><div class="emg">${i.em.map((v,ci)=>`<span class="et ${v?"on":""}" title="${s.creneaux[ci].type} ${fmtDShort(s.creneaux[ci].date)}">J${sessDates(s).indexOf(s.creneaux[ci].date)+1}${s.creneaux[ci].type==="Matin"?"M":s.creneaux[ci].type==="Soirée"?"S":"A"}</span>`).join("")}</div></td>
       <td>${i.ev!=null?`<span class="tag ok">✓ ${Math.round(i.ev*100)} %</span>`:`<span class="tag neutral">À compléter</span>`}</td>
@@ -1001,6 +1035,11 @@ function tabRapport(s){
     <div class="acts" style="margin-top:0"><button class="btn pri" data-act="saveRapport">${r.fait?"Mettre à jour le rapport":"Enregistrer le rapport"}</button></div></div>`;
 }
 afterRender["session-detail"]=()=>{
+  $$('[data-conv="organisme"]').forEach(el=>el.onchange=()=>{
+    const s=SE(el.dataset.s); s.organismeConvocateur=el.value.trim();
+    pousser("sessions",{action:"maj",id:s.id,champs:{organismeConvocateur:s.organismeConvocateur}},
+      "Organisme convocateur enregistré").catch(()=>{});
+  });
   /* Les champs de créneau se mettent à jour sans re-rendu : redessiner la page
      à chaque frappe détruisait le champ en cours de saisie et faisait perdre
      le curseur — c'est ce qui rendait la modification des horaires impossible.
@@ -2941,6 +2980,7 @@ const ACT={
     const s={id:uid("s"),titre:draft.titre.trim()||`${f.nom} — ${C(draft.clientId).nom}`,formationId:draft.formationId,
       clientId:draft.clientId,formateurId:draft.formateurId,type:draft.type,code:draft.code,lieu:draft.lieu,
       financeurId:draft.financeurId||"",modalites:[...draft.modalites],statut:"Planifiée",convention:false,convocation:false,
+      convocations:draft.convocations,organismeConvocateur:draft.organismeConvocateur,
       rapport:{fait:false,deroule:"",forts:"",diff:"",axes:""},besoin:{contexte:"",objectifs:"",contraintes:""},
       creneaux:draft.creneaux.map(c=>({...c})),inscrits:[],emF:draft.creneaux.map(()=>false)};
     (async()=>{
@@ -2948,7 +2988,8 @@ const ACT={
         const r=await api("sessions",{action:"creer",session:{
           titre:s.titre,code:s.code,type:s.type,modalite:draft.modalites[0]||"Présentiel",
           lieu:s.lieu,adresse:"",formationId:s.formationId,clientId:s.clientId,
-          formateurId:s.formateurId,financeurId:s.financeurId,creneaux:s.creneaux}});
+          formateurId:s.formateurId,financeurId:s.financeurId,
+          convocations:s.convocations,organismeConvocateur:s.organismeConvocateur,creneaux:s.creneaux}});
         s.id=r.id; db.sessions.unshift(s); toast("Session créée dans Notion");
         go("session-detail",s.id);
       }catch(e){ toast("⚠ Non créée : "+e.message); }
@@ -3128,6 +3169,13 @@ const ACT={
     i.attestation=!i.attestation;render();
     if(i.id) pousser("inscriptions",{action:"maj",id:i.id,champs:{attestation:i.attestation}},
       i.attestation?"Attestation marquée remise":"Attestation retirée").catch(()=>{});},
+  convSession:b=>{const s=SE(b.dataset.s);
+    s.convocations=b.dataset.v==="mien"?"Je m'en charge":"Gérées par un autre organisme";
+    if(s.convocations==="Je m'en charge") s.organismeConvocateur="";
+    render();
+    pousser("sessions",{action:"maj",id:s.id,champs:{convocations:s.convocations,organismeConvocateur:s.organismeConvocateur||""}},
+      s.convocations==="Je m'en charge"?"Convocations programmées pour cette session":"Convocations confiées à un autre organisme").catch(()=>{});},
+
   convocLigne:b=>{const s=SE(b.dataset.s),a=A(b.dataset.a);
     const i=s.inscrits.find(x=>x.aId===a.id);
     if(!i.convoc && !a.email){toast("Renseignez d'abord un email pour "+fullName(a));return;}
