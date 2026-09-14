@@ -53,6 +53,7 @@ module.exports = handler(async (req, res) => {
       typeTarif: P.select(x, "Type de tarif") || "€ HT",
       categorie: P.select(x, "Catégorie"),
       accroche: P.text(x, "Accroche"),
+      presentation: P.text(x, "Présentation"),
       objectif: P.text(x, "Objectif professionnel"),
       objectifsOp: P.text(x, "Objectifs opérationnels"),
       publicCible: P.text(x, "Public cible"),

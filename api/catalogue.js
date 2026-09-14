@@ -10,6 +10,7 @@ const MAP = {
   modalite:     v => ({ "Modalités": W.select(v) }),
   categorie:    v => ({ "Catégorie": W.select(v) }),
   accroche:     v => ({ "Accroche": W.text(v) }),
+  presentation: v => ({ "Présentation": W.text(v) }),
   objectif:     v => ({ "Objectif professionnel": W.text(v) }),
   objectifsOp:  v => ({ "Objectifs opérationnels": W.text(v) }),
   publicCible:  v => ({ "Public cible": W.text(v) }),

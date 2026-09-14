@@ -390,7 +390,7 @@ const NATURES=["Actions de formation","Bilan de compétences","VAE","Apprentissa
 /* Fabrique une fiche formation complète (champs Kaliopi + champs Notion) */
 function mkF(o){const f=Object.assign({
   nom:"",code:"",duree:7,jours:1,tarif:0,tarifInter:null,typeTarif:"€ HT",supports:0,
-  categorie:"",tags:[],statutPub:"Non publié",slug:"",accroche:"",metaDesc:"",titreSeo:"",image:"",motsCles:"",
+  categorie:"",tags:[],statutPub:"Non publié",slug:"",accroche:"",presentation:"",metaDesc:"",titreSeo:"",image:"",motsCles:"",
   objectif:"",objectifsOp:"",publicCible:"",prerequis:"",delais:"Inscription possible jusqu'à 15 jours avant le démarrage.",
   nsf:"",nature:"Actions de formation",accessibilite:"Notre référente handicap étudie chaque demande pour adapter le parcours (supports adaptés, aménagement des temps, accessibilité des locaux).",
   pointsForts:"",perimetre:"",participantsMax:null,niveau:"1",
@@ -1806,6 +1806,8 @@ function fInfos(f){
       <div class="fld"><label>Modalité</label><select data-f="modalite">${MODALITES_F.map(m=>`<option ${f.modalite===m?"selected":""}>${m}</option>`).join("")}</select></div>
     </div>
     <div class="fld"><label>Accroche</label><input type="text" data-f="accroche" value="${esc(f.accroche)}" placeholder="Sous-titre affiché sur la page web">
+      <div class="h">Champ propre à votre site — absent de l'outil de référence</div></div>
+    <div class="fld"><label>Présentation</label><textarea data-f="presentation" placeholder="Paragraphe d'introduction affiché en haut de la page web. Une ligne = un paragraphe.">${esc(f.presentation)}</textarea>
       <div class="h">Champ propre à votre site — absent de l'outil de référence</div></div>
     <div class="fld"><label>Objectif professionnel <span class="ind">IND 5</span></label><textarea data-f="objectif" placeholder="À l'issue de la formation, le stagiaire sera capable de…">${esc(f.objectif)}</textarea></div>
     <div class="fld"><label>Objectifs opérationnels et évaluables <span class="ind">IND 5</span></label><textarea data-f="objectifsOp" placeholder="1. …&#10;2. …&#10;3. …">${esc(f.objectifsOp)}</textarea></div>
@@ -3288,7 +3290,7 @@ const ACT={
   saveF:()=>{const f=F(route.param); if(!f) return;
     pousser("catalogue",{action:"maj",id:f.id,champs:{
       nom:f.nom,code:f.code,duree:f.duree,jours:f.jours,modalite:f.modalite,categorie:f.categorie,
-      accroche:f.accroche,objectif:f.objectif,objectifsOp:f.objectifsOp,publicCible:f.publicCible,
+      accroche:f.accroche,presentation:f.presentation,objectif:f.objectif,objectifsOp:f.objectifsOp,publicCible:f.publicCible,
       prerequis:f.prerequis,delais:f.delais,tarif:f.tarif,tarifInter:f.tarifInter,typeTarif:f.typeTarif,
       nsf:f.nsf,nature:f.nature,accessibilite:f.accessibilite,sanction:f.sanction,contenu:f.contenu,
       evalDesc:f.evalDesc,evalModalites:f.evalModalites,statutPub:f.statutPub,slug:f.slug,
