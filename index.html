@@ -897,7 +897,9 @@ function tabApprenants(s){
             title="${i.convoc?`Envoyée le ${fmtD(i.convocDate)} — cliquez pour renvoyer`:"Cliquez pour marquer envoyée"}">${i.convoc?"✓ Envoyée":"À envoyer"}</button>`}</td>
       <td><button class="tag ${i.pos?"ok":"neutral"}" data-act="togPos" data-i="${ii}">${i.pos?"✓ Complété":"À compléter"}</button></td>
       <td><div class="emg">${i.em.map((v,ci)=>`<span class="et ${v?"on":""}" title="${s.creneaux[ci].type} ${fmtDShort(s.creneaux[ci].date)}">J${sessDates(s).indexOf(s.creneaux[ci].date)+1}${s.creneaux[ci].type==="Matin"?"M":s.creneaux[ci].type==="Soirée"?"S":"A"}</span>`).join("")}</div></td>
-      <td>${i.ev!=null?`<span class="tag ok">✓ ${Math.round(i.ev*100)} %</span>`:`<span class="tag neutral">À compléter</span>`}</td>
+      <td>${i.ev!=null
+        ?`<span class="tag ${i.ev>=.5?"ok":"warn"}" title="${i.evaluation?`Écrit ${Math.round((i.evaluation.ecrit||0)*100)} % · Formateur ${Math.round((i.evaluation.formateur||0)*100)} %${i.evaluation.date?` · ${fmtD(i.evaluation.date)}`:""}`:""}">${Math.round(i.ev*100)} %</span>`
+        :`<span class="tag neutral">À compléter</span>`}</td>
       <td><button class="tag ${i.sat?"ok":"neutral"}" data-act="togSat" data-i="${ii}">${i.sat?"✓ Complété":"À compléter"}</button></td>
       <td><button class="tag ${i.attestation?"ok":"neutral"}" data-act="togAttestLigne" data-s="${s.id}" data-a="${a.id}">${i.attestation?"✓ Remise":"À remettre"}</button></td>
       <td><button class="tag ${i.froid?"ok":"neutral"}" data-act="togFroidLigne" data-s="${s.id}" data-a="${a.id}">${i.froid?"✓ Complétée":"J+90"}</button></td>

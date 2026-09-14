@@ -9,7 +9,7 @@ module.exports = handler(async (req, res) => {
   const [
     sessionsR, creneauxR, participantsR, apprenantsR,
     formationsR, entreprisesR, collabsR, financeursR,
-    contactsR, documentsR, echangesR, veilleR, ameliorationsR, competencesR, organismeR, emargementsR, abandonsR, modelesR,
+    contactsR, documentsR, echangesR, veilleR, ameliorationsR, competencesR, organismeR, emargementsR, evaluationsR, abandonsR, modelesR,
   ] = await Promise.all([
     queryAll(DB.sessions),
     queryAll(DB.creneaux),
@@ -27,6 +27,7 @@ module.exports = handler(async (req, res) => {
     queryAll(DB.competences).catch(() => []),
     queryAll(DB.organisme).catch(() => []),
     queryAll(DB.emargements).catch(() => []),
+    queryAll(DB.evaluations).catch(() => []),
     queryAll(DB.abandons).catch(() => []),
     queryAll(DB.modeles).catch(() => []),
   ]);
@@ -318,6 +319,30 @@ module.exports = handler(async (req, res) => {
   };
 
   /* ── Inscriptions (base Participants) groupées par session ── */
+  /* Notes réelles de l'évaluation de fin de formation, par participant.
+     La case « Évaluation complétée » ne dit que le fait, pas le résultat :
+     les scores se lisent dans 📊 Évaluations. */
+  const evalParParticipant = {};
+  evaluationsR.forEach(e => {
+    const x = e.properties;
+    const pid = P.rel1(x, "Participant");
+    if (!pid) return;
+    const ecrit = P.num(x, "Score écrit (70%)");
+    const form  = P.num(x, "Score formateur (30%)");
+    const total = P.formula(x, "Score total");
+    const calcule = (ecrit != null || form != null)
+      ? (ecrit || 0) * 0.7 + (form || 0) * 0.3
+      : null;
+    evalParParticipant[pid] = {
+      complete: P.check(x, "Complété"),
+      ecrit, formateur: form,
+      total: (typeof total === "number" ? total : calcule),
+      commentaire: P.text(x, "Commentaire formateur"),
+      date: P.date(x, "Date soumission"),
+      detail: P.text(x, "Réponses écrit"),
+    };
+  });
+
   const inscritsParSession = {};
   participantsR.forEach(p => {
     const x = p.properties;
@@ -330,7 +355,8 @@ module.exports = handler(async (req, res) => {
       nomBrut: P.title(x, "Nom complet"),
       prenomBrut: P.text(x, "Prénom"),
       pos: P.check(x, "Positionnement complété"),
-      ev: P.check(x, "Évaluation complétée") ? 1 : null,
+      ev: (evalParParticipant[id(p)] || {}).total,
+      evaluation: evalParParticipant[id(p)] || null,
       sat: P.check(x, "Satisfaction complétée"),
       froid: P.check(x, "Éval à froid complétée"),
       emComplets: P.check(x, "Émargements complets"),

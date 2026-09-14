@@ -17,6 +17,7 @@ const DB = {
   collaborateurs: "6ea075e127d282aebd248144a3b0b262",
   financeurs:     "242600454865420ba9cb67b5084d16e0",
   emargements:    "2fd075e127d281a48683e5c9f16c411b",
+  evaluations:    "2fd075e127d2812ca985d147b142e960",
   contacts:       "2fd075e127d2818595bed5d438136955",
   documents:      "353be9bc86be49038f98ad15552d5d80",
   interactions:   "51b9938446dd439b8a187d050a7e9fd0",
