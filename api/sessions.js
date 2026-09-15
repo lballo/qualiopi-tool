@@ -51,7 +51,6 @@ module.exports = handler(async (req, res) => {
         "Code session": W.text(s.code),
         "Type": W.select(s.type || "INTRA"),
         "Modalité": W.select(s.modalite || "Présentiel"),
-        "Statut": W.select("Planifiée"),
         "Lieu": W.text(s.lieu),
         "Adresse complète": W.text(s.adresse),
         "Formation": W.rel(s.formationId ? [s.formationId] : []),
@@ -87,7 +86,6 @@ module.exports = handler(async (req, res) => {
       adresse:      v => ({ "Adresse complète": W.text(v) }),
       type:         v => ({ "Type": W.select(v) }),
       modalite:     v => ({ "Modalité": W.select(v) }),
-      statut:       v => ({ "Statut": W.select(v) }),
       notes:        v => ({ "Notes internes": W.text(v) }),
       convocation:  v => ({ "Convocation envoyée": W.check(v) }),
       convocations: v => ({ "Convocations": W.select(v) }),
@@ -136,7 +134,7 @@ module.exports = handler(async (req, res) => {
     if (!id) return res.status(400).json({ erreur: "Identifiant manquant" });
 
     const page = await notion(`/pages/${id}`);
-    const statut = P.select(page.properties, "Statut");
+    const statut = P.formula(page.properties, "Statut calculé") || P.select(page.properties, "Statut");
     if (statut === "Terminée" && !force) {
       return res.status(409).json({
         erreur: "Session terminée : elle porte les preuves de l'audit. Confirmation explicite requise.",

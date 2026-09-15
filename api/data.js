@@ -403,7 +403,9 @@ module.exports = handler(async (req, res) => {
       type: P.select(x, "Type") || "INTRA",
       modalite: P.select(x, "Modalité") || "Présentiel",
       modalites: [P.select(x, "Modalité") || "Présentiel"],
-      statut: P.select(x, "Statut") || "Planifiée",
+      /* Statut déduit des créneaux par la formule Notion « Statut calculé ».
+         L'ancien menu déroulant restait figé et affichait « En cours » indéfiniment. */
+      statut: P.formula(x, "Statut calculé") || P.select(x, "Statut") || "Planifiée",
       lieu: P.text(x, "Lieu"),
       adresse: P.text(x, "Adresse complète"),
       /* Les dates viennent des créneaux, seule source de vérité. Les rollups Notion
