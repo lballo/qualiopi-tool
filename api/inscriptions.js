@@ -139,7 +139,7 @@ module.exports = handler(async (req, res) => {
 
 /* Déclenche un envoi dans n8n pour un participant précis.
    Le jeton ne quitte jamais le serveur : le navigateur n'appelle jamais n8n. */
-async function declencher(chemin, participantId) {
+async function declencher(chemin, participantId, sessionId) {
   const base = process.env.N8N_BASE_URL || "https://n8n.lauraballo.com";
   const secret = process.env.N8N_WEBHOOK_SECRET;
   if (!secret) return { ok: false, erreur: "N8N_WEBHOOK_SECRET absent de la configuration" };
@@ -147,7 +147,7 @@ async function declencher(chemin, participantId) {
     const rep = await fetch(`${base}/webhook/${chemin}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ participantId, secret }),
+      body: JSON.stringify(sessionId ? { sessionId, secret } : { participantId, secret }),
     });
     const brut = await rep.text();
     if (!rep.ok) return { ok: false, erreur: `n8n a répondu ${rep.status} : ${brut.slice(0, 200)}` };
@@ -178,6 +178,26 @@ async function declencher(chemin, participantId) {
       return res.status(200).json({ ok: true, date: null });
     }
     const r = await declencher("convocation-manuelle", id);
+    if (!r.ok) return res.status(502).json({ erreur: r.erreur });
+    return res.status(200).json({ ok: true, envoyes: r.envoyes, date: aujourdhui() });
+  }
+
+  /* ── Envois pilotés depuis le panel ──
+     Un seul point d'entrée pour les quatre documents restés manuels ou
+     automatiques : le panel envoie le type, on appelle le webhook n8n
+     correspondant. */
+  if (action === "envoi") {
+    const { id, type, sessionId } = body;
+    const chemins = {
+      positionnement: "positionnement-manuel",
+      questionnaires: "questionnaires-manuels",
+      froid:          "eval-froid-manuelle",
+      emargement:     "emargement-manuel",
+    };
+    const chemin = chemins[type];
+    if (!chemin) return res.status(400).json({ erreur: "Type d'envoi inconnu" });
+    if (!id && !sessionId) return res.status(400).json({ erreur: "Identifiant manquant" });
+    const r = await declencher(chemin, id, sessionId);
     if (!r.ok) return res.status(502).json({ erreur: r.erreur });
     return res.status(200).json({ ok: true, envoyes: r.envoyes, date: aujourdhui() });
   }

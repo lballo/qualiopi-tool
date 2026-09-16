@@ -857,6 +857,16 @@ function vSessionDetail(){
   `<div class="tabs" role="tablist">${tabs.map(([id,l,n])=>`<button class="tab ${tabSession===id?"on":""}" role="tab" aria-selected="${tabSession===id}" data-act="tab" data-t="${id}">${l}${n!==null?`<span class="n">${n}</span>`:""}</button>`).join("")}</div>`+
   ({apprenants:tabApprenants,besoin:tabBesoin,planning:tabPlanning,documents:tabDocuments,rapport:tabRapport}[tabSession])(s);
 }
+/* Statut d'un document à trois états.
+   Pas de date d'envoi → à envoyer. Date posée mais rien reçu → envoyé.
+   Case cochée par l'espace stagiaire → complété. Notion fait foi. */
+function pastilleEnvoi({complete, date, type, sid, aid, libelleComplete, sansRetour}){
+  if(complete) return `<span class="tag ok" title="${date?`Envoy\u00e9 le ${fmtD(date)}`:""}">\u2713 ${libelleComplete}</span>`;
+  const envoye = !!date;
+  return `<button class="tag ${envoye?"neutral":"warn"}" data-act="envoiLigne" data-type="${type}" data-s="${sid}" data-a="${aid}"
+    title="${envoye?`Envoy\u00e9 le ${fmtD(date)} \u2014 cliquez pour relancer`:"Cliquez pour envoyer"}">${envoye?(sansRetour?"Envoy\u00e9":"Envoy\u00e9, en attente"):"\u00c0 envoyer"}</button>`;
+}
+
 /* Envoi des convocations pour cette session (IND 9) */
 function blocConvocations(s){
   const actif   = s.convocations==="Je m'en charge";
@@ -895,15 +905,17 @@ function tabApprenants(s){
         ?`<span class="tag neutral" title="${esc(s.organismeConvocateur||"Envoi désactivé pour cette session")}">Non envoyée</span>`
         :`<button class="tag ${i.convoc?"ok":"warn"}" data-act="convocLigne" data-s="${s.id}" data-a="${a.id}"
             title="${i.convoc?`Envoyée le ${fmtD(i.convocDate)} — cliquez pour renvoyer`:"Cliquez pour envoyer la convocation"}">${i.convoc?"✓ Envoyée":"À envoyer"}</button>`}</td>
-      <td><button class="tag ${i.pos?"ok":"neutral"}" data-act="togPos" data-i="${ii}">${i.pos?"✓ Complété":"À compléter"}</button></td>
+      <td>${pastilleEnvoi({complete:i.pos,date:i.posDate,type:"positionnement",sid:s.id,aid:a.id,libelleComplete:"Complété"})}</td>
       <td><div class="emg">${i.em.map((v,ci)=>`<span class="et ${v?"on":""}" title="${s.creneaux[ci].type} ${fmtDShort(s.creneaux[ci].date)}">J${sessDates(s).indexOf(s.creneaux[ci].date)+1}${s.creneaux[ci].type==="Matin"?"M":s.creneaux[ci].type==="Soirée"?"S":"A"}</span>`).join("")}</div></td>
       <td>${i.ev!=null
         ?`<span class="tag ${i.ev>=.5?"ok":"warn"}" title="${i.evaluation?`Écrit ${Math.round((i.evaluation.ecrit||0)*100)} % · Formateur ${Math.round((i.evaluation.formateur||0)*100)} %${i.evaluation.date?` · ${fmtD(i.evaluation.date)}`:""}`:""}">${Math.round(i.ev*100)} %</span>`
-        :`<span class="tag neutral">À compléter</span>`}</td>
-      <td><button class="tag ${i.sat?"ok":"neutral"}" data-act="togSat" data-i="${ii}">${i.sat?"✓ Complété":"À compléter"}</button></td>
+        :pastilleEnvoi({complete:false,date:i.evDate,type:"questionnaires",sid:s.id,aid:a.id,libelleComplete:"Complété"})}</td>
+      <td>${pastilleEnvoi({complete:i.sat,date:i.satDate,type:"questionnaires",sid:s.id,aid:a.id,libelleComplete:"Complété"})}</td>
       <td><button class="tag ${i.attestation?"ok":"neutral"}" data-act="togAttestLigne" data-s="${s.id}" data-a="${a.id}">${i.attestation?"✓ Remise":"Envoyer"}</button></td>
-      <td><button class="tag ${i.froid?"ok":"neutral"}" data-act="togFroidLigne" data-s="${s.id}" data-a="${a.id}">${i.froid?"✓ Complétée":"J+90"}</button></td>
+      <td>${pastilleEnvoi({complete:i.froid,date:i.froidDate,type:"froid",sid:s.id,aid:a.id,libelleComplete:"Complétée"})}</td>
       <td class="right" style="white-space:nowrap">
+        <button class="btn sec sm" data-act="envoiLigne" data-type="emargement" data-s="${s.id}" data-a="${a.id}"
+          title="${i.emargDate?`Lien d'émargement envoyé le ${fmtD(i.emargDate)}`:"Envoyer le lien d'émargement par mail — dépannage du QR code"}">Lien émarg.</button>
         <button class="btn sec sm" data-go="inscription" data-param="${s.id}|${a.id}">Détail</button>
         <button class="btn sec sm danger" data-act="desinscrire" data-i="${ii}">Retirer</button></td></tr>`;}).join("")}
     <tr style="background:#FFFDF6"><td><div class="who"><span class="av gold">${initials({nom:T(s.formateurId)?.nom||"LB",prenom:T(s.formateurId)?.prenom||""})}</span>
@@ -3020,8 +3032,6 @@ const ACT={
       .then(r=>{ if(r){ s.dateDebut=r.debut; s.dateFin=r.fin; } render(); }).catch(()=>{});},
   sign:()=>toast("Les émargements se signent depuis le lien stagiaire ou le lien formateur"),
   signF:()=>toast("L'émargement formateur se signe depuis son lien dédié"),
-  togPos:b=>{const s=SE(route.param);s.inscrits[+b.dataset.i].pos=!s.inscrits[+b.dataset.i].pos;render();},
-  togSat:b=>{const s=SE(route.param);s.inscrits[+b.dataset.i].sat=!s.inscrits[+b.dataset.i].sat;render();},
   desinscrire:b=>{const s=SE(route.param),ix=+b.dataset.i,ins=s.inscrits[ix];
     (async()=>{ try{
       if(ins.id) await api("inscriptions",{action:"desinscrire",id:ins.id});
@@ -3181,6 +3191,22 @@ const ACT={
      envoie le mail et coche la case dans Notion. Un simple clic ne doit plus
      marquer « envoyée » sans envoi — c'est ce qui bloquait définitivement
      l'envoi automatique pour le participant concerné. */
+  /* Envoi à la demande : positionnement, questionnaires de fin, évaluation
+     à froid, lien d'émargement. Le panel n'écrit rien lui-même — n8n envoie,
+     puis pose la date dans Notion. */
+  envoiLigne:async b=>{const s=SE(b.dataset.s),a=A(b.dataset.a);
+    const i=s.inscrits.find(x=>x.aId===a.id);
+    const libelle={positionnement:"le questionnaire de positionnement",questionnaires:"les questionnaires de fin de formation",froid:"l'\u00e9valuation \u00e0 froid",emargement:"le lien d'\u00e9margement"}[b.dataset.type];
+    if(!i||!i.id){toast("Enregistrez d'abord l'inscription");return;}
+    if(!a.email){toast("Renseignez d'abord un email pour "+fullName(a));return;}
+    const deja={positionnement:i.posDate,questionnaires:i.evDate,froid:i.froidDate,emargement:i.emargDate}[b.dataset.type];
+    if(deja && !confirm(`Renvoyer ${libelle} \u00e0 ${a.email} ?`))return;
+    const texte=b.textContent; b.disabled=true; b.textContent="Envoi\u2026";
+    try{
+      await pousser("inscriptions",{action:"envoi",type:b.dataset.type,id:i.id},`Envoy\u00e9 \u00e0 ${a.email}`);
+    }catch(e){ toast(String(e && e.message || e)); b.textContent=texte; }
+    await recharger();},
+
   convocLigne:async b=>{const s=SE(b.dataset.s),a=A(b.dataset.a);
     const i=s.inscrits.find(x=>x.aId===a.id);
     if(!i.id){toast("Enregistrez d'abord l'inscription");return;}
@@ -3204,9 +3230,6 @@ const ACT={
       i.attestation=true;
     }catch(e){ toast(String(e && e.message || e)); }
     render();},
-  togFroidLigne:b=>{const s=SE(b.dataset.s),i=s.inscrits.find(x=>x.aId===b.dataset.a);
-    i.froid=!i.froid;render();
-    if(i.id) pousser("inscriptions",{action:"maj",id:i.id,champs:{froid:i.froid}}).catch(()=>{});},
   copierLien:b=>{copier(b.dataset.url);toast("Lien copié");},
   copierTous:b=>{const a=A(b.dataset.a),s=SE(b.dataset.s);
     const i=s.inscrits.find(x=>x.aId===a.id);

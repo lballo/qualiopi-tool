@@ -370,6 +370,13 @@ module.exports = handler(async (req, res) => {
       montant: P.num(x, "Montant pris en charge"),
       attestation: !!P.date(x, "Date de remise de l attestation"),
       attestationDate: P.date(x, "Date de remise de l attestation"),
+      /* Dates d'envoi : elles distinguent « à envoyer » de « envoyé mais
+         non complété ». Les cases « complété » viennent de l'app stagiaire. */
+      posDate:    P.date(x, "Positionnement envoyé"),
+      evDate:     P.date(x, "Évaluation envoyée"),
+      satDate:    P.date(x, "Satisfaction envoyée"),
+      froidDate:  P.date(x, "Éval à froid envoyée"),
+      emargDate:  P.date(x, "Émargement envoyé"),
       adaptation: P.check(x, "Besoin d'adaptation à signaler"),
       besoin: P.text(x, "Besoin d'adaptation spécifique de la formation? "),
       mesures: P.text(x, "Mesures adaptées mises en place"),
