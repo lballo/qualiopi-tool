@@ -120,7 +120,7 @@ module.exports = handler(async (req, res) => {
       sat:         v => ({ "Satisfaction complétée": W.check(v) }),
       froid:       v => ({ "Éval à froid complétée": W.check(v) }),
       evaluation:  v => ({ "Évaluation complétée": W.check(v) }),
-      attestation: v => ({ "Attestation remise": W.check(v) }),
+      attestation: v => ({ "Date de remise de l attestation": W.date(v ? new Date().toISOString().slice(0, 10) : null) }),
       mode:        v => ({ "Mode d'inscription": W.select(v) }),
       financement: v => ({ "Mode de financement": W.select(v) }),
       financeurId: v => ({ "💶 Financeur": W.rel(v ? [v] : []) }),
@@ -173,10 +173,7 @@ async function declencher(chemin, participantId) {
     if (!id) return res.status(400).json({ erreur: "Identifiant manquant" });
     if (!envoyee) {
       await notion(`/pages/${id}`, "PATCH", {
-        properties: {
-          "Convocation envoyée": W.check(false),
-          "Date d'envoi de la convocation": W.date(null),
-        },
+        properties: { "Date d'envoi de la convocation": W.date(null) },
       });
       return res.status(200).json({ ok: true, date: null });
     }

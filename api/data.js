@@ -360,13 +360,16 @@ module.exports = handler(async (req, res) => {
       sat: P.check(x, "Satisfaction complétée"),
       froid: P.check(x, "Éval à froid complétée"),
       emComplets: P.check(x, "Émargements complets"),
-      convoc: P.check(x, "Convocation envoyée"),
+      /* La date fait foi : les cases « Convocation envoyée » et « Attestation
+         remise » ont été supprimées, elles doublonnaient ces dates. */
+      convoc: !!P.date(x, "Date d'envoi de la convocation"),
       convocDate: P.date(x, "Date d'envoi de la convocation"),
       mode: P.select(x, "Mode d'inscription"),
       financement: P.select(x, "Mode de financement"),
       financeurId: P.rel1(x, "💶 Financeur"),
       montant: P.num(x, "Montant pris en charge"),
-      attestation: P.check(x, "Attestation remise"),
+      attestation: !!P.date(x, "Date de remise de l attestation"),
+      attestationDate: P.date(x, "Date de remise de l attestation"),
       adaptation: P.check(x, "Besoin d'adaptation à signaler"),
       besoin: P.text(x, "Besoin d'adaptation spécifique de la formation? "),
       mesures: P.text(x, "Mesures adaptées mises en place"),
@@ -415,7 +418,7 @@ module.exports = handler(async (req, res) => {
       convention: P.files(x, "Convention signée").length > 0,
       conventionFichier: P.files(x, "Convention signée")[0]?.nom || null,
       conventionUrl: P.files(x, "Convention signée")[0]?.url || "",
-      convocation: P.check(x, "Convocation envoyée"),
+      convocation: !!P.date(x, "Date d'envoi de la convocation"),
       convocations: P.select(x, "Convocations"),
       organismeConvocateur: P.text(x, "Organisme convocateur"),
       besoin: {
