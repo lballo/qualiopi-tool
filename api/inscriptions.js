@@ -137,18 +137,61 @@ module.exports = handler(async (req, res) => {
     return res.status(200).json({ ok: true });
   }
 
-  /* ── Convocation ── */
+/* Déclenche un envoi dans n8n pour un participant précis.
+   Le jeton ne quitte jamais le serveur : le navigateur n'appelle jamais n8n. */
+async function declencher(chemin, participantId) {
+  const base = process.env.N8N_BASE_URL || "https://n8n.lauraballo.com";
+  const secret = process.env.N8N_WEBHOOK_SECRET;
+  if (!secret) return { ok: false, erreur: "N8N_WEBHOOK_SECRET absent de la configuration" };
+  try {
+    const rep = await fetch(`${base}/webhook/${chemin}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ participantId, secret }),
+    });
+    const brut = await rep.text();
+    if (!rep.ok) return { ok: false, erreur: `n8n a répondu ${rep.status} : ${brut.slice(0, 200)}` };
+    let donnees = [];
+    try { donnees = JSON.parse(brut); } catch { donnees = []; }
+    const envoyes = Array.isArray(donnees) ? donnees.length : (donnees && donnees.email ? 1 : 0);
+    if (!envoyes) {
+      return { ok: false, erreur: "Aucun envoi : vérifiez l'adresse du stagiaire, le réglage des convocations de la session, et pour l'attestation que l'évaluation porte bien ses deux notes." };
+    }
+    return { ok: true, envoyes };
+  } catch (e) {
+    return { ok: false, erreur: `n8n injoignable : ${e.message}` };
+  }
+}
+
+  /* ── Convocation ──
+     « envoyee: false » remet simplement le compteur à zéro dans Notion.
+     Sinon on délègue à n8n, qui fabrique le PDF, envoie le mail, coche la
+     case et archive le document. Le panel ne coche plus lui-même : une case
+     cochée sans envoi réel bloquait définitivement la convocation. */
   if (action === "convocation") {
     const { id, envoyee = true } = body;
     if (!id) return res.status(400).json({ erreur: "Identifiant manquant" });
-    const date = envoyee ? aujourdhui() : null;
-    await notion(`/pages/${id}`, "PATCH", {
-      properties: {
-        "Convocation envoyée": W.check(envoyee),
-        "Date d'envoi de la convocation": W.date(date),
-      },
-    });
-    return res.status(200).json({ ok: true, date });
+    if (!envoyee) {
+      await notion(`/pages/${id}`, "PATCH", {
+        properties: {
+          "Convocation envoyée": W.check(false),
+          "Date d'envoi de la convocation": W.date(null),
+        },
+      });
+      return res.status(200).json({ ok: true, date: null });
+    }
+    const r = await declencher("convocation-manuelle", id);
+    if (!r.ok) return res.status(502).json({ erreur: r.erreur });
+    return res.status(200).json({ ok: true, envoyes: r.envoyes, date: aujourdhui() });
+  }
+
+  /* ── Attestation de fin de formation ── */
+  if (action === "attestation-envoi") {
+    const { id } = body;
+    if (!id) return res.status(400).json({ erreur: "Identifiant manquant" });
+    const r = await declencher("attestation-manuelle", id);
+    if (!r.ok) return res.status(502).json({ erreur: r.erreur });
+    return res.status(200).json({ ok: true, envoyes: r.envoyes, date: aujourdhui() });
   }
 
   /* ── Désinscrire ── */
