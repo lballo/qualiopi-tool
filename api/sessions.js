@@ -57,7 +57,7 @@ module.exports = handler(async (req, res) => {
         "Entreprise": W.rel(s.clientId ? [s.clientId] : []),
         "👩‍🏫 Formateur·rice": W.rel(s.formateurId ? [s.formateurId] : []),
         "💶 Financeur": W.rel(s.financeurId ? [s.financeurId] : []),
-        "Convocations": W.select(s.convocations || "Je m'en charge"),
+        "Envois": W.select(s.envois || "Manuel"),
         "Organisme convocateur": W.text(s.organismeConvocateur || ""),
       },
     });
@@ -88,7 +88,7 @@ module.exports = handler(async (req, res) => {
       modalite:     v => ({ "Modalité": W.select(v) }),
       notes:        v => ({ "Notes internes": W.text(v) }),
       convocation:  v => ({ "Date d'envoi de la convocation": W.date(v ? new Date().toISOString().slice(0, 10) : null) }),
-      convocations: v => ({ "Convocations": W.select(v) }),
+      envois: v => ({ "Envois": W.select(v) }),
       organismeConvocateur: v => ({ "Organisme convocateur": W.text(v) }),
       formationId:  v => ({ "Formation": W.rel(v ? [v] : []) }),
       clientId:     v => ({ "Entreprise": W.rel(v ? [v] : []) }),

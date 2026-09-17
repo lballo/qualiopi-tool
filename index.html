@@ -777,7 +777,7 @@ const STD=[["Matin","09:00","12:30"],["Après-midi","13:30","17:00"],["Soirée",
 function vNewSession(){
   if(!draft) draft={formationId:db.formations[0].id,clientId:db.clients[0].id,formateurId:db.formateurs[0].id,
     type:"INTRA",code:String(db.sessions.length+1),lieu:"",titre:"",financeurId:"",modalites:["Présentiel"],
-    convocations:"Je m'en charge",organismeConvocateur:"",
+    envois:"Manuel",organismeConvocateur:"",
     creneaux:(j=>[{date:j,type:"Matin",d:"09:00",f:"12:30"},{date:j,type:"Après-midi",d:"13:30",f:"17:00"}])(dateProchaine())};
   return head(I.sessionNew,"Nouvelle session","Créez une session de formation et son planning",
     `<button class="btn sec" data-go="sessions">← Retour</button>`)+
@@ -801,10 +801,10 @@ function vNewSession(){
      <select data-d="financeurId"><option value="">— Aucun / fonds propres —</option>
      ${db.financeurs.map(f=>`<option value="${f.id}" ${draft.financeurId===f.id?"selected":""}>${esc(f.nom)}</option>`).join("")}</select>
      <div class="h">Sert à la demande de prise en charge et rappelle le délai de dépôt.</div></div>
-   <div class="fld"><label>Convocations des stagiaires <span class="ind">IND 9</span></label>
-     <label class="ck" style="max-width:none"><input type="checkbox" data-dck="convocations" ${draft.convocations==="Je m'en charge"?"checked":""}>
-       Envoyer automatiquement les convocations</label>
-     <div class="h">Les convocations partent 10 jours avant le démarrage. Décochez si un autre organisme s'en charge.</div></div>
+   <div class="fld"><label>Mode d'envoi des documents <span class="ind">IND 9</span></label>
+     <label class="ck" style="max-width:none"><input type="checkbox" data-dck="envois" ${draft.envois==="Automatique"?"checked":""}>
+       Envois automatiques \u2014 je suis l'organisme de formation</label>
+     <div class="h">Coché, les six documents partent seuls aux dates prévues. Décoché, rien ne part automatiquement mais tout reste envoyable à la main — c'est le réglage à garder quand un autre organisme gère la session.</div></div>
    <div class="fld"><label>Modalités pédagogiques <span class="ind">IND 7</span></label>
      <div class="h" style="margin:0 0 8px">Sélectionnez une ou plusieurs modalités</div>
      <div class="checks">${["Présentiel","Distanciel synchrone","Distanciel asynchrone","En situation de travail (AFEST)"].map(m=>
@@ -830,7 +830,7 @@ function vNewSession(){
 afterRender["new-session"]=()=>{
   $$("[data-d]").forEach(el=>el.onchange=()=>{draft[el.dataset.d]=el.value;render();});
   $$("[data-dck]").forEach(el=>el.onchange=()=>{
-    draft[el.dataset.dck]=el.checked?"Je m'en charge":"Gérées par un autre organisme";
+    draft[el.dataset.dck]=el.checked?"Automatique":"Manuel";
     if(el.checked) draft.organismeConvocateur=""; render();});
   $$("[data-mod]").forEach(el=>el.onchange=()=>{
     const m=el.dataset.mod;
@@ -867,24 +867,31 @@ function pastilleEnvoi({complete, date, type, sid, aid, libelleComplete, sansRet
     title="${envoye?`Envoy\u00e9 le ${fmtD(date)} \u2014 cliquez pour relancer`:"Cliquez pour envoyer"}">${envoye?(sansRetour?"Envoy\u00e9":"Envoy\u00e9, en attente"):"\u00c0 envoyer"}</button>`;
 }
 
-/* Envoi des convocations pour cette session (IND 9) */
-function blocConvocations(s){
-  const actif   = s.convocations==="Je m'en charge";
-  const inscrits= s.inscrits.length;
-  const restants= s.inscrits.filter(i=>!i.convoc).length;
-  const message = !inscrits
-    ? "Aucun stagiaire inscrit pour l'instant. Le réglage s'appliquera dès la première inscription."
-    : actif
-      ? (restants
-          ? `${restants} convocation${restants>1?"s":""} partira${restants>1?"ont":""} automatiquement 10 jours avant le démarrage.`
-          : `Les ${inscrits} convocation${inscrits>1?"s ont":" a"} été envoyée${inscrits>1?"s":""}.`)
-      : "Aucune convocation ne partira pour cette session.";
-  return `<div style="display:flex;gap:14px;align-items:flex-start;padding:12px 14px;border:1px solid #e5e1dc;border-radius:8px;background:${!inscrits?"#faf9f8":actif?"#f4f9f5":"#f6f5f4"}">
-    <label class="ck" style="max-width:none;margin:0;${inscrits?"":"opacity:.5;cursor:not-allowed"}">
-      <input type="checkbox" data-act="convToggle" data-s="${s.id}" ${actif?"checked":""} ${inscrits?"":"disabled"}>
-      Envoyer les convocations</label>
-    <div class="ct-txt" style="flex:1"><span class="s">${message}</span>
-      ${!actif&&inscrits?`<div style="margin-top:8px"><input type="text" data-conv="organisme" data-s="${s.id}" value="${esc(s.organismeConvocateur||"")}" placeholder="Qui convoque ? (facultatif, utile en audit)" style="max-width:320px"></div>`:""}
+/* Mode d'envoi de la session.
+   Automatique : je suis l'organisme, les documents partent seuls aux dates
+   prévues. Manuel : un autre organisme gère la session, rien ne part seul,
+   mais chaque bouton du tableau reste actif pour dépanner. */
+function blocEnvois(s){
+  const auto = s.envois === "Automatique";
+  const inscrits = s.inscrits.length;
+  const restants = s.inscrits.filter(i=>!i.convoc).length;
+  const message = auto
+    ? (!inscrits
+        ? "Aucun stagiaire inscrit. Les envois d\u00e9marreront d\u00e8s la premi\u00e8re inscription."
+        : restants
+          ? `Convocation \u00e0 J-10, positionnement \u00e0 J-2, questionnaires le dernier jour, attestation \u00e0 J+5, \u00e9valuation \u00e0 froid \u00e0 J+90. ${restants} convocation${restants>1?"s":""} reste${restants>1?"nt":""} \u00e0 partir.`
+          : "Tous les envois pr\u00e9vus ont \u00e9t\u00e9 effectu\u00e9s pour cette session.")
+    : "Rien ne part automatiquement. Chaque document reste envoyable \u00e0 la main depuis le tableau ci-dessous.";
+  const bouton = (val,libelle,aide)=>`<button class="btn ${s.envois===val?"pri":"sec"} sm" data-act="modeEnvois" data-s="${s.id}" data-v="${val}" title="${aide}">${libelle}</button>`;
+  return `<div style="display:flex;gap:14px;align-items:flex-start;padding:12px 14px;border:1px solid #e5e1dc;border-radius:8px;background:${auto?"#f4f9f5":"#fdf8f2"}">
+    <div class="ct-txt" style="flex:1">
+      <b>${auto?"Envois automatiques":"Envois manuels"}</b>
+      <span class="s">${message}</span>
+      ${!auto?`<div style="margin-top:8px"><input type="text" data-conv="organisme" data-s="${s.id}" value="${esc(s.organismeConvocateur||"")}" placeholder="Quel organisme g\u00e8re cette session ? (utile en audit)" style="max-width:340px"></div>`:""}
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      ${bouton("Automatique","Automatique","Je suis l'organisme de formation : tout part aux dates pr\u00e9vues")}
+      ${bouton("Manuel","Manuel","Un autre organisme g\u00e8re : rien ne part seul, mais je peux tout d\u00e9clencher")}
     </div>
   </div>`;
 }
@@ -897,14 +904,12 @@ function tabApprenants(s){
     <div style="padding:18px 20px;display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap">
       <div><div class="ct">Apprenants inscrits</div><div class="cd">Les signatures proviennent des liens stagiaire et formateur : elles ne se saisissent pas ici.</div></div>
     </div>
-    <div style="padding:0 20px 18px">${blocConvocations(s)}</div>
+    <div style="padding:0 20px 18px">${blocEnvois(s)}</div>
     ${s.inscrits.length?`<div class="tw" tabindex="0"><table><thead><tr><th>Apprenant</th><th>Convocation</th><th>Positionnement</th><th>Émargement (${s.creneaux.length} créneaux)</th><th>Évaluation</th><th>Satisfaction</th><th>Attestation</th><th>À froid</th><th></th></tr></thead><tbody>
     ${s.inscrits.map((i,ii)=>{const a=A(i.aId);return `<tr>
       <td><div class="who"><span class="av">${initials(a)}</span><span><b>${esc(fullName(a))}</b><span class="s">${esc(a.email)}</span></span></div></td>
-      <td>${s.convocations==="Gérées par un autre organisme"
-        ?`<span class="tag neutral" title="${esc(s.organismeConvocateur||"Envoi désactivé pour cette session")}">Non envoyée</span>`
-        :`<button class="tag ${i.convoc?"ok":"warn"}" data-act="convocLigne" data-s="${s.id}" data-a="${a.id}"
-            title="${i.convoc?`Envoyée le ${fmtD(i.convocDate)} — cliquez pour renvoyer`:"Cliquez pour envoyer la convocation"}">${i.convoc?"✓ Envoyée":"À envoyer"}</button>`}</td>
+      <td><button class="tag ${i.convoc?"ok":"warn"}" data-act="convocLigne" data-s="${s.id}" data-a="${a.id}"
+            title="${i.convoc?`Envoyée le ${fmtD(i.convocDate)} — cliquez pour renvoyer`:(s.envois==="Automatique"?"Cliquez pour envoyer sans attendre J-10":"Envois manuels sur cette session — cliquez pour envoyer")}">${i.convoc?"✓ Envoyée":"À envoyer"}</button></td>
       <td>${pastilleEnvoi({complete:i.pos,date:i.posDate,type:"positionnement",sid:s.id,aid:a.id,libelleComplete:"Complété"})}</td>
       <td><div class="emg">${i.em.map((v,ci)=>`<span class="et ${v?"on":""}" title="${s.creneaux[ci].type} ${fmtDShort(s.creneaux[ci].date)}">J${sessDates(s).indexOf(s.creneaux[ci].date)+1}${s.creneaux[ci].type==="Matin"?"M":s.creneaux[ci].type==="Soirée"?"S":"A"}</span>`).join("")}</div></td>
       <td>${i.ev!=null
@@ -2993,7 +2998,7 @@ const ACT={
     const s={id:uid("s"),titre:draft.titre.trim()||`${f.nom} — ${C(draft.clientId).nom}`,formationId:draft.formationId,
       clientId:draft.clientId,formateurId:draft.formateurId,type:draft.type,code:draft.code,lieu:draft.lieu,
       financeurId:draft.financeurId||"",modalites:[...draft.modalites],statut:"Planifiée",convention:false,convocation:false,
-      convocations:draft.convocations,organismeConvocateur:draft.organismeConvocateur,
+      envois:draft.envois,organismeConvocateur:draft.organismeConvocateur,
       rapport:{fait:false,deroule:"",forts:"",diff:"",axes:""},besoin:{contexte:"",objectifs:"",contraintes:""},
       creneaux:draft.creneaux.map(c=>({...c})),inscrits:[],emF:draft.creneaux.map(()=>false)};
     (async()=>{
@@ -3002,7 +3007,7 @@ const ACT={
           titre:s.titre,code:s.code,type:s.type,modalite:draft.modalites[0]||"Présentiel",
           lieu:s.lieu,adresse:"",formationId:s.formationId,clientId:s.clientId,
           formateurId:s.formateurId,financeurId:s.financeurId,
-          convocations:s.convocations,organismeConvocateur:s.organismeConvocateur,creneaux:s.creneaux}});
+          envois:s.envois,organismeConvocateur:s.organismeConvocateur,creneaux:s.creneaux}});
         s.id=r.id; db.sessions.unshift(s); toast("Session créée dans Notion");
         go("session-detail",s.id);
       }catch(e){ toast("⚠ Non créée : "+e.message); }
@@ -3180,12 +3185,13 @@ const ACT={
     i.attestation=!i.attestation;render();
     if(i.id) pousser("inscriptions",{action:"maj",id:i.id,champs:{attestation:i.attestation}},
       i.attestation?"Attestation marquée remise":"Attestation retirée").catch(()=>{});},
-  convToggle:b=>{const s=SE(b.dataset.s);
-    s.convocations=b.checked?"Je m'en charge":"Gérées par un autre organisme";
-    if(b.checked) s.organismeConvocateur="";
+  modeEnvois:b=>{const s=SE(b.dataset.s);
+    if(s.envois===b.dataset.v)return;
+    s.envois=b.dataset.v;
+    if(s.envois==="Automatique") s.organismeConvocateur="";
     render();
-    pousser("sessions",{action:"maj",id:s.id,champs:{convocations:s.convocations,organismeConvocateur:s.organismeConvocateur||""}},
-      b.checked?"Convocations activées pour cette session":"Convocations désactivées pour cette session").catch(()=>{});},
+    pousser("sessions",{action:"maj",id:s.id,champs:{envois:s.envois,organismeConvocateur:s.organismeConvocateur||""}},
+      s.envois==="Automatique"?"Envois automatiques activ\u00e9s pour cette session":"Envois repass\u00e9s en manuel").catch(()=>{});},
 
   /* La convocation part réellement : le panel appelle n8n, qui fabrique le PDF,
      envoie le mail et coche la case dans Notion. Un simple clic ne doit plus
@@ -3204,7 +3210,10 @@ const ACT={
     const texte=b.textContent; b.disabled=true; b.textContent="Envoi\u2026";
     try{
       await pousser("inscriptions",{action:"envoi",type:b.dataset.type,id:i.id},`Envoy\u00e9 \u00e0 ${a.email}`);
-    }catch(e){ toast(String(e && e.message || e)); b.textContent=texte; }
+    }catch(e){ toast(String(e && e.message || e)); b.textContent=texte; return; }
+    /* L'\u00e9margement n'a pas de pastille de statut : son envoi ne change rien
+       \u00e0 l'\u00e9cran, inutile de relire Notion. */
+    if(b.dataset.type==="emargement"){ b.disabled=false; b.textContent=texte; return; }
     await recharger();},
 
   convocLigne:async b=>{const s=SE(b.dataset.s),a=A(b.dataset.a);

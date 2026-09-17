@@ -426,7 +426,8 @@ module.exports = handler(async (req, res) => {
       conventionFichier: P.files(x, "Convention signée")[0]?.nom || null,
       conventionUrl: P.files(x, "Convention signée")[0]?.url || "",
       convocation: !!P.date(x, "Date d'envoi de la convocation"),
-      convocations: P.select(x, "Convocations"),
+      /* Mode d'envoi de la session. Vide = Manuel : rien ne part seul. */
+      envois: P.select(x, "Envois") || "Manuel",
       organismeConvocateur: P.text(x, "Organisme convocateur"),
       besoin: {
         contexte: P.text(x, "Analyse du besoin — contexte"),
