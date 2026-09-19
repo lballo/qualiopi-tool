@@ -425,7 +425,9 @@ module.exports = handler(async (req, res) => {
       convention: P.files(x, "Convention signée").length > 0,
       conventionFichier: P.files(x, "Convention signée")[0]?.nom || null,
       conventionUrl: P.files(x, "Convention signée")[0]?.url || "",
-      convocation: !!P.date(x, "Date d'envoi de la convocation"),
+      /* La date d'envoi n'existe que sur les participants : une session est
+         « convoquée » quand tous ses inscrits ont une date d'envoi. */
+      convocation: inscrits.length > 0 && inscrits.every(i => i.convoc),
       /* Mode d'envoi de la session. Vide = Manuel : rien ne part seul. */
       envois: P.select(x, "Envois") || "Manuel",
       organismeConvocateur: P.text(x, "Organisme convocateur"),

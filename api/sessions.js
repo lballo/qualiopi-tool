@@ -87,7 +87,6 @@ module.exports = handler(async (req, res) => {
       type:         v => ({ "Type": W.select(v) }),
       modalite:     v => ({ "Modalité": W.select(v) }),
       notes:        v => ({ "Notes internes": W.text(v) }),
-      convocation:  v => ({ "Date d'envoi de la convocation": W.date(v ? new Date().toISOString().slice(0, 10) : null) }),
       envois: v => ({ "Envois": W.select(v) }),
       organismeConvocateur: v => ({ "Organisme convocateur": W.text(v) }),
       formationId:  v => ({ "Formation": W.rel(v ? [v] : []) }),

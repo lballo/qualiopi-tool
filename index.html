@@ -456,7 +456,7 @@ let db = {formations:[],clients:[],formateurs:[],financeurs:[],apprenants:[],ses
   veilles:[],ameliorations:[],abandons:[],modeles:[],org:{nom:"",forme:"",siret:"",siren:"",nda:"",ndaPrefet:"",ape:"",capital:null,
   tva:"",rcs:"",email:"",tel:"",adresse:"",cp:"",ville:"",region:"",site:"",repNom:"",repQualite:"",
   qualiopi:false,qualiopiDate:"",modalitesAcces:"",delaisAcces:"",implication:"",secteurs:"",
-  validiteDevis:30,delaiConvoc:15,juridiction:"",docs:{ri:null,cgv:null,certif:null,logo:null},autres:[]}};
+  validiteDevis:30,delaiConvoc:10,juridiction:"",docs:{ri:null,cgv:null,certif:null,logo:null},autres:[]}};
 let CLE="";
 const LOT1=["dash","sessions","session-detail","new-session","apprenants","apprenant-detail","inscription","import"];
 
@@ -581,6 +581,16 @@ async function televerser(fichier,pageId,propriete,apres){
 }
 function toast(m){const t=$("#toast");t.textContent=m;t.classList.add("on");clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove("on"),2600);}
 
+/* Une session doit avoir ses convocations parties quand je suis l'organisme
+   (Envois = Automatique), qu'elle a des inscrits et que son démarrage tombe
+   dans le délai d'envoi fixé dans Mon organisme (10 jours par défaut). */
+function convocationDue(s){
+  if(s.envois!=="Automatique"||!s.inscrits.length||!s.dateDebut) return false;
+  if(s.statut==="Annulée") return false;
+  const delai=(db.org&&db.org.delaiConvoc)||10;
+  const jours=(new Date(s.dateDebut)-new Date(new Date().toDateString()))/86400000;
+  return jours<=delai;
+}
 /* ═══════════════ CONFORMITÉ (calculée) ═══════════════ */
 function conformite(){
   const pts=[];
@@ -596,7 +606,10 @@ function conformite(){
   add("Veille pédagogique alimentée", db.veilles.some(v=>v.theme==="pedago"),"IND 25","veille","Veille");
   add("Veilles exploitées (actions décrites)", db.veilles.some(v=>v.exploitation?.trim()),"IND 23-25","veille","Veille");
   add("Conventions déposées", db.sessions.length>0 && db.sessions.every(s=>s.convention),"IND 9","sessions","Sessions");
-  add("Convocations envoyées", db.sessions.length>0 && db.sessions.every(s=>s.convocation),"IND 9","sessions","Sessions");
+  /* Seules comptent les sessions où je suis l'organisme (Envois = Automatique)
+     et dont la date d'envoi est arrivée ; les autres relèvent du donneur d'ordre. */
+  const aConvoquer=db.sessions.filter(convocationDue);
+  add("Convocations envoyées", aConvoquer.every(s=>s.convocation),"IND 9","sessions","Sessions");
   add("Émargements complets sur les sessions terminées",
       db.sessions.filter(s=>s.statut==="Terminée").every(s=>emSigned(s)>=emTotal(s) && s.emF.every(Boolean)),"IND 9","sessions","Sessions");
   add("Rapports de session rédigés", db.sessions.filter(s=>s.statut==="Terminée").every(s=>s.rapport.fait),"IND 32","sessions","Sessions");
@@ -844,7 +857,7 @@ function vSessionDetail(){
   const s=SE(route.param)||db.sessions[0];
   if(!s) return vSessions();
   route.param=s.id;
-  const manque=[!s.convention&&"Convention",!s.convocation&&"Convocation",
+  const manque=[!s.convention&&"Convention",convocationDue(s)&&!s.convocation&&"Convocation",
     s.statut==="Terminée"&&!s.rapport.fait&&"Rapport"].filter(Boolean);
   const tabs=[["apprenants","Apprenants",s.inscrits.length],["besoin","Analyse du besoin",null],
     ["planning","Planning",s.creneaux.length],["documents","Documents",null],["rapport","Rapport de session",null]];
@@ -3069,9 +3082,6 @@ const ACT={
   depConvention:()=>{const s=SE(route.param);
     if(s.convention){toast("Retirez le fichier depuis Notion");return;}
     choisirFichier(f=>televerser(f,s.id,"Convention signée",()=>{s.convention=true;s.conventionFichier=f.name;}));},
-  depConvocation:()=>{const s=SE(route.param);s.convocation=!s.convocation;render();
-    pousser("sessions",{action:"maj",id:s.id,champs:{convocation:s.convocation}},
-      s.convocation?"Convocations marquées envoyées":"Convocations à envoyer").catch(()=>{});},
   depProgramme:()=>{const s=SE(route.param),f=F(s.formationId);
     if(!f){toast("Aucune formation rattachée");return;}
     if(f.programme){toast("Programme déjà déposé");return;}
