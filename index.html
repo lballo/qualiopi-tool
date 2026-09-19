@@ -456,7 +456,7 @@ let db = {formations:[],clients:[],formateurs:[],financeurs:[],apprenants:[],ses
   veilles:[],ameliorations:[],abandons:[],modeles:[],org:{nom:"",forme:"",siret:"",siren:"",nda:"",ndaPrefet:"",ape:"",capital:null,
   tva:"",rcs:"",email:"",tel:"",adresse:"",cp:"",ville:"",region:"",site:"",repNom:"",repQualite:"",
   qualiopi:false,qualiopiDate:"",modalitesAcces:"",delaisAcces:"",implication:"",secteurs:"",
-  validiteDevis:30,delaiConvoc:10,juridiction:"",docs:{ri:null,cgv:null,certif:null,logo:null},autres:[]}};
+  validiteDevis:30,delaiConvoc:10,juridiction:"",docs:{cgv:null,certif:null,logo:null},autres:[]}};
 let CLE="";
 const LOT1=["dash","sessions","session-detail","new-session","apprenants","apprenant-detail","inscription","import"];
 
@@ -2675,7 +2675,7 @@ function vOrganisme(){
   const req=[["Nom",!!o.nom],["SIRET",!!o.siret],["NDA",!!o.nda],["Représentant légal",!!o.repNom],
     ["Adresse complète",!!(o.adresse&&o.cp&&o.ville)],["Modalités d'accès",!!o.modalitesAcces.trim()],
     ["Délais d'accès",!!o.delaisAcces.trim()],["Méthodes d'implication",!!o.implication.trim()],
-    ["Secteurs d'intervention",!!o.secteurs.trim()],["Règlement intérieur",!!o.docs.ri],["CGV",!!o.docs.cgv]];
+    ["Secteurs d'intervention",!!o.secteurs.trim()],["Règlement intérieur (Modèles)",db.modeles.some(m=>m.type==="Règlement intérieur"&&m.statut==="Actif")],["CGV",!!o.docs.cgv]];
   const manque=req.filter(r=>!r[1]);
   return head(I.organisme,"Mon organisme","Fiche d'identité et documents de votre organisme",
     `<span class="tag ${manque.length?"warn":"ok"}">${req.length-manque.length} / ${req.length} renseignés</span>`)+
@@ -2901,14 +2901,13 @@ function oQualite(o){
   </div>`;
 }
 function oDocs(o){
-  const docs=[["ri","Règlement intérieur","IND 9","Généré automatiquement à partir de vos informations, ou remplacé par votre PDF"],
-    ["cgv","Conditions générales de vente","","PDF uniquement, max 10 Mo"],
+  const docs=[["cgv","Conditions générales de vente","","PDF uniquement, max 10 Mo"],
     ["logo","Logo","","Appliqué à tous vos documents"]];
   return `<div class="card"><div class="ct">Personnalisation des documents</div>
     <div class="note" style="margin-top:8px">Les documents Qualiopi (émargements, attestations, conventions, convocations) sont générés à partir des informations de votre organisme, dans une mise en page conforme au référentiel. Vous personnalisez le logo, la couleur de marque, et pouvez remplacer le règlement intérieur et les CGV par vos propres PDF.</div>
   </div>
   <div class="card"><div class="ct">Documents cadres <span class="ind">IND 9</span></div>
-    <div class="cd" style="margin-bottom:12px">Remplacez un document généré par le vôtre.</div>
+    <div class="cd" style="margin-bottom:12px">Remplacez un document généré par le vôtre. Le règlement intérieur se gère dans <b>Modèles</b> : sa page Notion est mise en PDF et jointe à chaque convocation.</div>
     ${docs.map(([k,lbl,ind,hint])=>`<div class="docrow">
       <div class="di"><b>${lbl}</b>${ind?`<span class="ind" style="margin-left:6px">${ind}</span>`:""}
         <span class="s">${o.docs[k]?"📎 "+esc(o.docs[k]):hint}</span></div>
@@ -2937,7 +2936,7 @@ afterRender.organisme=()=>{
     if(el.tagName==="TEXTAREA"||el.type==="text"||el.type==="email") el.oninput=()=>{db.org[k]=el.value;};
     else el.onchange=()=>{db.org[k]=el.type==="number"?(el.value===""?null:+el.value):el.value;render();};
   });
-  const PROP_O={ri:"Règlement intérieur",cgv:"Conditions générales de vente",
+  const PROP_O={cgv:"Conditions générales de vente",
     certif:"Certificat Qualiopi",logo:"Logo"};
   $$("[data-ofile]").forEach(el=>el.onchange=()=>{
     const f=el.files?.[0]; if(!f)return;

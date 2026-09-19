@@ -562,7 +562,6 @@ module.exports = handler(async (req, res) => {
     juridiction: P.text(o, "Juridiction compétente"),
     couleur: P.text(o, "Couleur de marque"),
     docs: {
-      ri: P.files(o, "Règlement intérieur")[0]?.nom || null,
       cgv: P.files(o, "Conditions générales de vente")[0]?.nom || null,
       certif: P.files(o, "Certificat Qualiopi")[0]?.nom || null,
       logo: P.files(o, "Logo")[0]?.nom || null,
