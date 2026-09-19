@@ -372,6 +372,7 @@ const I={
  aide:S+'<circle cx="12" cy="12" r="9.2"/><path d="M9.6 9.3a2.5 2.5 0 1 1 3.3 2.4c-.6.2-.9.8-.9 1.4v.4"/><circle cx="12" cy="16.6" r=".9" fill="currentColor" stroke="none"/></svg>',
  legale:S+'<path d="M12 3v18"/><path d="M6 7h12"/><path d="M6 7l-3 6h6l-3-6z"/><path d="M18 7l-3 6h6l-3-6z"/><path d="M8 21h8"/></svg>',
  metiers:S+'<path d="M3 17l6-6 4 4 7-7"/><path d="M14 8h6v6"/></svg>',
+ handicap:S+'<circle cx="12" cy="4.5" r="1.8"/><path d="M12 7.5v6h5l2 5"/><path d="M12 10h4"/><path d="M9 11.5a5 5 0 1 0 6.5 6.5"/></svg>',
  pedago:S+'<path d="M9 18h6"/><path d="M10 21h4"/><path d="M12 3a6 6 0 0 0-3.5 10.9c.4.3.6.8.6 1.3v.3h5.8v-.3c0-.5.2-1 .6-1.3A6 6 0 0 0 12 3z"/></svg>',
 };
 
@@ -1569,6 +1570,15 @@ const THEMES={
       source:"[Agefiph / Ressource Handicap Formation / référent handicap]",
       desc:"Situation concernée : [type].\nAdaptation identifiée : [support, rythme, matériel].\nPartenaire mobilisable : [nom].",
       explo:"Actions : [mise à jour de la politique handicap, adaptation d'un support].\nRéférente handicap : Laura Ballo — échéance : [JJ/MM/AAAA]."}}},
+  handicap:{ic:I.handicap,titre:"Veille sur l'accueil et la compensation du handicap",ind:"IND 26",
+    canevas:{"Évolution des droits et dispositifs":{titre:"[Mesure / texte] — accueil des personnes en situation de handicap",
+      source:"[handicap.gouv.fr / Agefiph / Ressource Handicap Formation] — [lien]",
+      desc:"Ce qui change : [mesure, aide, obligation].\nEntrée en vigueur : [JJ/MM/AAAA ou annonce].\nCe que cela implique pour nous : [information publique, adaptation, partenaire].",
+      explo:"Actions : [mise à jour de la politique handicap, de l'information publique, du réseau de partenaires].\nRéférente handicap : Laura Ballo — échéance : [JJ/MM/AAAA]."},
+    "Partenaire ou ressource":{titre:"[Partenaire / ressource] — mobilisable pour nos stagiaires",
+      source:"[Agefiph / Cap emploi / MDPH / RHF] — [lien ou contact]",
+      desc:"Ressource identifiée : [nom].\nCe qu'elle permet : [compensation, financement, conseil].\nConditions : [public, délais].",
+      explo:"Actions : [ajout à l'annuaire des partenaires, mention dans la politique handicap].\nRéférente handicap : Laura Ballo — échéance : [JJ/MM/AAAA]."}}},
 };
 function vVeille(){
   const parTheme=k=>db.veilles.filter(v=>v.theme===k);
@@ -1581,7 +1591,7 @@ function vVeille(){
     <thead><tr><th>Élément de veille</th><th>Thématique</th><th>Date</th><th>Exploitation</th><th>Statut</th><th></th></tr></thead><tbody>
     ${db.veilles.slice().sort((a,b)=>b.date.localeCompare(a.date)).map(v=>`<tr>
       <td><b>${esc(v.titre)}</b><span class="s">${esc(v.source||"Source non précisée")}</span></td>
-      <td><span class="tag ${v.theme==="legale"?"bad":v.theme==="metiers"?"warn":"info"}">${THEMES[v.theme].ind}</span></td>
+      <td><span class="tag ${v.theme==="legale"?"bad":v.theme==="metiers"?"warn":"info"}">${(THEMES[v.theme]||THEMES.legale).ind}</span></td>
       <td>${fmtDShort(v.date)}</td>
       <td>${v.exploitation?.trim()?`<span class="tag ok">Décrite</span>`:`<span class="tag bad">Manquante</span>`}</td>
       <td><span class="tag ${v.statut==="Fait"?"ok":v.statut==="En cours"?"warn":"neutral"}">${v.statut}</span></td>
@@ -1593,7 +1603,7 @@ function vVeille(){
 function vVeilleNew(){
   if(!draft) draft={theme:"legale",date:AUJ(),titre:"",source:"",desc:"",explo:"",
     responsable:"Laura Ballo",echeance:"",statut:"À traiter",formationId:"",canevas:null,preuves:0,preuvesEx:0};
-  const t=THEMES[draft.theme];
+  const t=THEMES[draft.theme]||THEMES.legale;
   return head(I.veilleNew,"Ajoutez votre propre veille","Sélectionnez une thématique et enregistrez votre veille",
     `<button class="btn sec" data-go="veille">← Retour</button>`)+
   `<div class="themes">${Object.entries(THEMES).map(([k,x])=>`<button class="theme ${draft.theme===k?"on":""}" data-act="setTheme" data-k="${k}">
@@ -3321,7 +3331,7 @@ const ACT={
 
   /* veille */
   setTheme:b=>{draft.theme=b.dataset.k;draft.canevas=null;render();},
-  useCanevas:b=>{const k=b.dataset.k;const c=THEMES[draft.theme].canevas[k];
+  useCanevas:b=>{const k=b.dataset.k;const c=(THEMES[draft.theme]||THEMES.legale).canevas[k];
     draft.canevas=k;draft.titre=c.titre;draft.source=c.source;draft.desc=c.desc;draft.explo=c.explo;render();},
   saveVeille:()=>{
     if(!draft.titre.trim()){toast("Le titre est obligatoire");return;}
