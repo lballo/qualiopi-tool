@@ -63,6 +63,34 @@ const MAP = {
     commentaires: v => ({ "Commentaires": W.text(v) }),
     actionCreee:  v => ({ "Action amélioration créée": W.check(v) }),
   },
+  risque: {
+    risque:        v => ({ "Risque": W.title(v) }),
+    numero:        v => ({ "N°": W.num(v) }),
+    categorie:     v => ({ "Catégorie": W.select(v) }),
+    cause:         v => ({ "Cause": W.text(v) }),
+    probabilite:   v => ({ "Probabilité": W.select(v) }),
+    impact:        v => ({ "Impact": W.select(v) }),
+    mesures:       v => ({ "Mesures déjà en place": W.text(v) }),
+    action:        v => ({ "Action proposée": W.text(v) }),
+    responsable:   v => ({ "Responsable": W.text(v) }),
+    statut:        v => ({ "Statut": W.select(v) }),
+    derniereRevue: v => ({ "Date de dernière revue": W.date(v) }),
+    prochaineRevue:v => ({ "Prochaine revue": W.date(v) }),
+    /* Criticité et Niveau sont des formules Notion : calculées, non écrites. */
+  },
+  signalement: {
+    reference:  v => ({ "Référence": W.title(v) }),
+    date:       v => ({ "Date de réception": W.date(v) }),
+    canal:      v => ({ "Canal": W.select(v) }),
+    type:       v => ({ "Type de signalement": W.select(v) }),
+    nature:     v => ({ "Nature": W.multi(v) }),
+    accuse:     v => ({ "Accusé de réception envoyé le": W.date(v) }),
+    entretiens: v => ({ "Entretiens réalisés": W.check(v) }),
+    statut:     v => ({ "Statut": W.select(v) }),
+    cloture:    v => ({ "Date de clôture": W.date(v) }),
+    /* Faits, personnes et mesures restent dans la base Notion à accès restreint :
+       le panel ne les saisit pas (registre volontairement non nominatif). */
+  },
   modele: {
     nom:        v => ({ "Nom du modèle": W.title(v) }),
     type:       v => ({ "Type": W.select(v) }),
@@ -110,7 +138,8 @@ const MAP = {
 };
 
 const BASE = { veille: DB.veille, amelioration: DB.ameliorations, organisme: DB.organisme,
-               abandon: DB.abandons, modele: DB.modeles };
+               abandon: DB.abandons, modele: DB.modeles,
+               risque: DB.risques, signalement: DB.signalements };
 
 function proprietes(entite, champs) {
   const m = MAP[entite] || {};

@@ -2805,6 +2805,38 @@ function qIndicateurs(){
 }
 
 /* ─── Analyse des risques (IND 32) ─── */
+const RQ_CAT=["Continuité","Outils & données","Accueil & accessibilité","Pédagogie & contenus","Sécurité des personnes","Commercial & contractuel","Information publique"];
+const RQ_PROBA=["1 — Rare","2 — Possible","3 — Fréquent"];
+const RQ_IMPACT=["1 — Gêne","2 — Session dégradée","3 — Annulation / stagiaire lésé / juridique"];
+const RQ_STAT=["À valider","Validé","Action en cours","Maîtrisé"];
+function formRisque(){
+  const v=draft.rqVals||{};
+  const opt=(liste,val)=>`<option value="">— Choisir —</option>`+liste.map(t=>`<option ${val===t?"selected":""}>${t}</option>`).join("");
+  return `<div class="card" style="background:#FCFDFD;margin-bottom:14px">
+    <div class="ct" style="font-size:14px">${draft.rqId?"Modifier le risque":"Nouveau risque"}</div>
+    <div class="cd" style="margin-bottom:12px">La criticité se calcule seule dans Notion (Probabilité × Impact) dès que ces deux champs sont renseignés.</div>
+    <div class="fld"><label>Risque *</label><input type="text" id="rqRisque" value="${esc(v.risque||"")}" placeholder="Ex : indisponibilité de la formatrice le jour J"></div>
+    <div class="g2">
+      <div class="fld"><label>Catégorie</label><select id="rqCat">${opt(RQ_CAT,v.categorie)}</select></div>
+      <div class="fld"><label>N° d'ordre</label><input type="number" id="rqNum" value="${v.numero??""}"></div>
+    </div>
+    <div class="fld"><label>Cause</label><textarea id="rqCause" style="min-height:60px" placeholder="Ce qui peut déclencher le risque">${esc(v.cause||"")}</textarea></div>
+    <div class="g2">
+      <div class="fld"><label>Probabilité</label><select id="rqProba">${opt(RQ_PROBA,v.probabilite)}</select></div>
+      <div class="fld"><label>Impact</label><select id="rqImpact">${opt(RQ_IMPACT,v.impact)}</select></div>
+    </div>
+    <div class="fld"><label>Mesures déjà en place</label><textarea id="rqMesures" style="min-height:60px">${esc(v.mesures||"")}</textarea></div>
+    <div class="fld"><label>Action proposée</label><textarea id="rqAction" style="min-height:60px">${esc(v.action||"")}</textarea></div>
+    <div class="g2">
+      <div class="fld"><label>Responsable</label><input type="text" id="rqResp" value="${esc(v.responsable||"Laura Ballo")}"></div>
+      <div class="fld"><label>Statut</label><select id="rqStatut">${RQ_STAT.map(t=>`<option ${(v.statut||"À valider")===t?"selected":""}>${t}</option>`).join("")}</select></div>
+      <div class="fld"><label>Date de dernière revue</label><input type="date" id="rqRevue" value="${v.derniereRevue||""}"></div>
+      <div class="fld"><label>Prochaine revue</label><input type="date" id="rqProchaine" value="${v.prochaineRevue||""}"></div>
+    </div>
+    <div class="acts" style="margin-top:0"><button class="btn sec" data-act="hideForm">Annuler</button>
+      <button class="btn pri" data-act="addRq">${draft.rqId?"Mettre à jour":"Enregistrer"}</button></div>
+  </div>`;
+}
 function qRisques(){
   const r=(db.risques||[]);
   const chauds=r.filter(x=>(x.criticite||0)>=6).length;
@@ -2812,41 +2844,81 @@ function qRisques(){
   return `<div class="card"><div class="chead"><div><div class="ct">Analyse des risques <span class="ind">IND 32</span></div>
     <div class="cd">Exigence du référentiel applicable au 1er novembre 2026 : les risques pouvant dégrader la qualité des prestations, leur cotation et les mesures de maîtrise.</div></div>
     <div class="sp">${chauds?`<span class="tag warn">${chauds} risque${chauds>1?"s":""} à criticité élevée</span>`:""}
-      ${aRevoir?`<span class="tag warn">${aRevoir} revue${aRevoir>1?"s":""} en retard</span>`:""}</div></div>
-    ${r.length?`<div class="tw"><table><thead><tr><th>Risque</th><th>Catégorie</th><th>Criticité</th><th>Mesure de maîtrise</th><th>Statut</th><th>Prochaine revue</th></tr></thead><tbody>
+      ${aRevoir?`<span class="tag warn">${aRevoir} revue${aRevoir>1?"s":""} en retard</span>`:""}
+      <button class="btn pri sm" data-act="showAddRq">+ Nouveau risque</button></div></div>
+    ${draft?.rq?formRisque():""}
+    ${r.length?`<div class="tw" tabindex="0"><table><thead><tr><th>Risque</th><th>Catégorie</th><th>Criticité</th><th>Mesure de maîtrise</th><th>Statut</th><th>Prochaine revue</th><th></th></tr></thead><tbody>
       ${r.map(x=>`<tr><td><b>${esc(x.risque)}</b><div class="s">${esc(x.cause||"")}</div></td>
         <td class="s">${esc(x.categorie||"—")}</td>
         <td><span class="tag ${(x.criticite||0)>=6?"warn":"neutral"}">${x.criticite??"—"}</span></td>
         <td class="s">${esc(x.mesures||x.action||"—")}</td>
         <td><span class="tag ${x.statut==="Maîtrisé"?"ok":"neutral"}">${esc(x.statut||"—")}</span></td>
-        <td class="s">${x.prochaineRevue?fmtDShort(x.prochaineRevue):"—"}</td></tr>`).join("")}
+        <td class="s">${x.prochaineRevue?fmtDShort(x.prochaineRevue):"—"}</td>
+        <td class="right" style="white-space:nowrap">
+          <button class="btn sec sm" data-act="editRq" data-id="${x.id}" aria-label="Modifier le risque ${esc(x.risque||"")}">Modifier</button>
+          <button class="btn sec sm danger" data-act="delRq" data-id="${x.id}" aria-label="Supprimer le risque ${esc(x.risque||"")}">✕</button></td></tr>`).join("")}
     </tbody></table></div>`
     :`<div class="empty" style="padding:28px"><div class="e">${I.organisme}</div><b>Aucun risque identifié</b>
-      <p>La cartographie des risques est attendue par l'auditeur : indisponibilité de la formatrice, panne des automatisations, salle inadaptée, contenus obsolètes…</p></div>`}
-    <div class="note" style="margin-top:10px">Les risques se créent et se cotent dans la base Notion « ⚠️ Analyse des risques ». Cette vue est en lecture seule.</div>
+      <p>La cartographie des risques est attendue par l'auditeur : indisponibilité de la formatrice, panne des automatisations, salle inadaptée, contenus obsolètes…</p>
+      <button class="btn pri" data-act="showAddRq">+ Nouveau risque</button></div>`}
   </div>`;
 }
 
 /* ─── Registre des signalements (IND 12) ─── */
+const SG_CANAL=["Oral auprès de la formatrice","Email","Espace stagiaire","Autre"];
+const SG_TYPE=["Participant / formatrice","Participant / participant"];
+const SG_NATURE=["Harcèlement moral","Harcèlement sexuel","Agissement sexiste","Discrimination","Violence physique ou verbale","Autre"];
+const SG_STAT=["Reçu","En cours de traitement","Clos"];
+function formSignalement(){
+  const v=draft.sgVals||{};
+  const natSel=v.nature||[];
+  const opt=(liste,val)=>`<option value="">— Choisir —</option>`+liste.map(t=>`<option ${val===t?"selected":""}>${t}</option>`).join("");
+  return `<div class="card" style="background:#FCFDFD;margin-bottom:14px">
+    <div class="ct" style="font-size:14px">${draft.sgId?"Modifier le signalement":"Nouveau signalement"}</div>
+    <div class="cd" style="margin-bottom:12px">Suivi du traitement. Les faits, les personnes et les mesures de protection se consignent dans la base Notion à accès restreint — pas ici.</div>
+    <div class="g2">
+      <div class="fld"><label>Référence *</label><input type="text" id="sgRef" value="${esc(v.reference||"")}" placeholder="Ex : SIG-2026-001"></div>
+      <div class="fld"><label>Date de réception</label><input type="date" id="sgDate" value="${v.date||new Date().toISOString().slice(0,10)}"></div>
+      <div class="fld"><label>Canal</label><select id="sgCanal">${opt(SG_CANAL,v.canal)}</select></div>
+      <div class="fld"><label>Type de signalement</label><select id="sgType">${opt(SG_TYPE,v.type)}</select></div>
+    </div>
+    <div class="fld"><label>Nature</label>
+      <div style="display:flex;flex-wrap:wrap;gap:6px 16px;margin-top:4px">${SG_NATURE.map(t=>`<label class="ck" style="max-width:none;margin:0"><input type="checkbox" data-sgnat="${t}" ${natSel.includes(t)?"checked":""}> ${t}</label>`).join("")}</div></div>
+    <div class="g2">
+      <div class="fld"><label>Accusé de réception envoyé le</label><input type="date" id="sgAccuse" value="${v.accuse||""}"><div class="h">Sous 48 h ouvrées</div></div>
+      <div class="fld"><label>Statut</label><select id="sgStatut">${SG_STAT.map(t=>`<option ${(v.statut||"Reçu")===t?"selected":""}>${t}</option>`).join("")}</select></div>
+      <div class="fld"><label>Date de clôture</label><input type="date" id="sgCloture" value="${v.cloture||""}"></div>
+      <div class="fld"><label class="ck" style="max-width:none;margin:26px 0 0"><input type="checkbox" id="sgEntretiens" ${v.entretiens?"checked":""}> Entretiens réalisés</label></div>
+    </div>
+    <div class="acts" style="margin-top:0"><button class="btn sec" data-act="hideForm">Annuler</button>
+      <button class="btn pri" data-act="addSg">${draft.sgId?"Mettre à jour":"Enregistrer"}</button></div>
+  </div>`;
+}
 function qSignalements(){
   const g=(db.signalements||[]);
   const ouverts=g.filter(x=>x.statut!=="Clos").length;
   const sansAr=g.filter(x=>!x.accuse).length;
   return `<div class="card"><div class="chead"><div><div class="ct">Signalements — violences, harcèlement, discriminations <span class="ind">IND 12</span></div>
-    <div class="cd">Suivi du traitement uniquement. Le détail des signalements reste dans la base Notion à accès restreint : aucun nom n'est affiché ici.</div></div>
+    <div class="cd">Suivi du traitement. Le détail confidentiel (faits, personnes, mesures) reste dans la base Notion à accès restreint : aucun nom n'est affiché ici.</div></div>
     <div class="sp">${ouverts?`<span class="tag warn">${ouverts} en cours</span>`:`<span class="tag ok">Aucun en cours</span>`}
-      ${sansAr?`<span class="tag warn">${sansAr} sans accusé de réception</span>`:""}</div></div>
-    ${g.length?`<div class="tw"><table><thead><tr><th>Référence</th><th>Reçu le</th><th>Canal</th><th>Type</th><th>Accusé de réception</th><th>Entretiens</th><th>Statut</th></tr></thead><tbody>
+      ${sansAr?`<span class="tag warn">${sansAr} sans accusé de réception</span>`:""}
+      <button class="btn pri sm" data-act="showAddSg">+ Nouveau signalement</button></div></div>
+    ${draft?.sg?formSignalement():""}
+    ${g.length?`<div class="tw" tabindex="0"><table><thead><tr><th>Référence</th><th>Reçu le</th><th>Canal</th><th>Type</th><th>Accusé de réception</th><th>Entretiens</th><th>Statut</th><th></th></tr></thead><tbody>
       ${g.map(x=>`<tr><td><b>${esc(x.reference||"—")}</b></td>
         <td class="s">${x.date?fmtDShort(x.date):"—"}</td>
         <td class="s">${esc(x.canal||"—")}</td>
         <td class="s">${esc(x.type||"—")}</td>
         <td>${x.accuse?`<span class="tag ok">${fmtDShort(x.accuse)}</span>`:`<span class="tag warn">à envoyer</span>`}</td>
         <td>${x.entretiens?"✓":"—"}</td>
-        <td><span class="tag ${x.statut==="Clos"?"ok":"warn"}">${esc(x.statut||"Reçu")}</span></td></tr>`).join("")}
+        <td><span class="tag ${x.statut==="Clos"?"ok":"warn"}">${esc(x.statut||"Reçu")}</span></td>
+        <td class="right" style="white-space:nowrap">
+          <button class="btn sec sm" data-act="editSg" data-id="${x.id}" aria-label="Modifier le signalement ${esc(x.reference||"")}">Modifier</button>
+          <button class="btn sec sm danger" data-act="delSg" data-id="${x.id}" aria-label="Supprimer le signalement ${esc(x.reference||"")}">✕</button></td></tr>`).join("")}
     </tbody></table></div>`
     :`<div class="empty" style="padding:28px"><div class="e">${I.organisme}</div><b>Aucun signalement</b>
-      <p>Un registre vide est une preuve valable : il montre que le dispositif existe et qu'aucune situation n'a été signalée.</p></div>`}
+      <p>Un registre vide est une preuve valable : il montre que le dispositif existe et qu'aucune situation n'a été signalée.</p>
+      <button class="btn pri" data-act="showAddSg">+ Nouveau signalement</button></div>`}
     <div class="note" style="margin-top:10px">Rappel du circuit : accusé de réception sous 48 heures ouvrées, mesures de protection immédiates, entretiens, puis bilan anonymisé en amélioration continue.</div>
   </div>`;
 }
@@ -3786,6 +3858,58 @@ const ACT={
     if(!confirm("Supprimer cette action ?"))return;
     db.ameliorations=db.ameliorations.filter(a=>a.id!==id);render();
     pousser("qualite",{action:"supprimer",entite:"amelioration",id},"Action supprimée").catch(()=>{});},
+
+  /* ── Analyse des risques (IND 32) ── */
+  showAddRq:()=>{draft={rq:true,rqVals:{statut:"À valider",responsable:"Laura Ballo",
+    derniereRevue:new Date().toISOString().slice(0,10)}};render();},
+  editRq:b=>{const x=db.risques.find(r=>r.id===b.dataset.id); if(!x)return;
+    draft={rq:true,rqId:x.id,rqVals:{...x}};render();},
+  addRq:()=>{const g=id=>document.getElementById(id);
+    const risque=g("rqRisque").value.trim();
+    if(!risque){toast("Le libellé du risque est obligatoire");g("rqRisque").classList.add("err");return;}
+    const champs={risque,categorie:g("rqCat").value,numero:g("rqNum").value===""?null:+g("rqNum").value,
+      cause:g("rqCause").value.trim(),probabilite:g("rqProba").value,impact:g("rqImpact").value,
+      mesures:g("rqMesures").value.trim(),action:g("rqAction").value.trim(),responsable:g("rqResp").value.trim(),
+      statut:g("rqStatut").value,derniereRevue:g("rqRevue").value,prochaineRevue:g("rqProchaine").value};
+    const modif=draft.rqId;
+    (async()=>{ try{
+      await api("qualite",{action:modif?"maj":"creer",entite:"risque",id:modif||undefined,champs});
+      /* La criticité est une formule Notion : on relit pour l'afficher à jour. */
+      draft=null; await charger(); render();
+      toast(modif?"Risque mis à jour dans Notion":"Risque enregistré dans Notion");
+    }catch(e){ toast("⚠ Non enregistré : "+e.message); } })();},
+  delRq:b=>{const id=b.dataset.id;
+    if(!confirm("Supprimer ce risque ?"))return;
+    db.risques=db.risques.filter(x=>x.id!==id);render();
+    pousser("qualite",{action:"supprimer",entite:"risque",id},"Risque supprimé").catch(()=>{});},
+
+  /* ── Registre des signalements (IND 12) ── */
+  showAddSg:()=>{draft={sg:true,sgVals:{statut:"Reçu",nature:[],
+    date:new Date().toISOString().slice(0,10)}};render();},
+  editSg:b=>{const x=db.signalements.find(s=>s.id===b.dataset.id); if(!x)return;
+    draft={sg:true,sgId:x.id,sgVals:{...x,nature:x.nature||[]}};render();},
+  addSg:()=>{const g=id=>document.getElementById(id);
+    const reference=g("sgRef").value.trim();
+    if(!reference){toast("La référence est obligatoire");g("sgRef").classList.add("err");return;}
+    const nature=[...document.querySelectorAll("[data-sgnat]")].filter(c=>c.checked).map(c=>c.dataset.sgnat);
+    const champs={reference,date:g("sgDate").value,canal:g("sgCanal").value,type:g("sgType").value,
+      nature,accuse:g("sgAccuse").value,entretiens:g("sgEntretiens").checked,
+      statut:g("sgStatut").value,cloture:g("sgCloture").value};
+    const modif=draft.sgId;
+    (async()=>{ try{
+      const r=await api("qualite",{action:modif?"maj":"creer",entite:"signalement",id:modif||undefined,champs});
+      if(modif){const i=db.signalements.findIndex(s=>s.id===modif);
+        db.signalements[i]={...db.signalements[i],...champs};}
+      else db.signalements.unshift({...champs,id:r.id});
+      draft=null;render();
+      toast(modif?"Signalement mis à jour dans Notion":"Signalement enregistré dans Notion");
+    }catch(e){ toast("⚠ Non enregistré : "+e.message); } })();},
+  delSg:b=>{const id=b.dataset.id;
+    if(!confirm("Supprimer ce signalement ?"))return;
+    db.signalements=db.signalements.filter(x=>x.id!==id);render();
+    pousser("qualite",{action:"supprimer",entite:"signalement",id},"Signalement supprimé").catch(()=>{});},
+
+  hideForm:()=>{draft=null;render();},
 };
 
 /* Démarrage */
