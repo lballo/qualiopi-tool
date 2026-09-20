@@ -1,7 +1,9 @@
 /* POST /api/catalogue — base 📚 Formations */
 const { notion, queryAll, P, W, DB, handler, readBody } = require("./_notion");
 
-/* Correspondance champ de l'interface → propriété Notion */
+/* Correspondance champ de l'interface → propriété Notion.
+   Délais d'accès et accessibilité handicap ne sont plus par formation :
+   ils sont gérés une seule fois dans 🏛️ Mon organisme (ind. 1 et 26). */
 const MAP = {
   nom:          v => ({ "Nom de la formation": W.title(v) }),
   code:         v => ({ "Code formation": W.text(v) }),
@@ -15,16 +17,12 @@ const MAP = {
   objectifsOp:  v => ({ "Objectifs opérationnels": W.text(v) }),
   publicCible:  v => ({ "Public cible": W.text(v) }),
   prerequis:    v => ({ "Prérequis": W.text(v) }),
-  delais:       v => ({ "Délais d'accès": W.text(v) }),
   tarif:        v => ({ "Tarif HT intra": W.num(v) }),
   tarifInter:   v => ({ "Tarif HT inter": W.num(v) }),
-  typeTarif:    v => ({ "Type de tarif": W.select(v) }),
   nsf:          v => ({ "Code NSF": W.text(v) }),
   nature:       v => ({ "Nature de l action": W.select(v) }),
-  accessibilite:v => ({ "Accessibilité handicap": W.text(v) }),
   sanction:     v => ({ "Sanction de la formation": W.text(v) }),
   contenu:      v => ({ "Contenu de formation": W.text(v) }),
-  evalDesc:     v => ({ "Évaluations formatives (description)": W.text(v) }),
   evalModalites:v => ({ "Modalités d évaluation": W.text(v) }),
   statutPub:    v => ({ "Statut publication": W.select(v) }),
   slug:         v => ({ "slug": W.text(v) }),

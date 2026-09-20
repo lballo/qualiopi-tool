@@ -27,6 +27,10 @@ const DB = {
   organisme:      "90761e357af84a75aed2e5da8dbe1b63",
   modeles:        "31304185625c45b38eb3a17be7ea01a8",
   abandons:       "3a6907683ed34e02be29816c15a2fbf8",
+  risques:        "3d5c228e57184a71b56503b4314d26a8",
+  signalements:   "f0fcc062d1e44856a00a91e728cd57c3",
+  indicateurs:    "88a2c2bf0fbf47c5a286060f39faf861",
+  partenairesHandicap: "0f794c8102bb45db91cfdee1c5b8a838",
 };
 
 /* ── Appel générique ── */
@@ -82,6 +86,11 @@ const P = {
   url:    (p, k) => p[k]?.url || "",
   rel:    (p, k) => (p[k]?.relation || []).map(r => r.id.replace(/-/g, "")),
   rel1:   (p, k) => (p[k]?.relation || [])[0]?.id?.replace(/-/g, "") || "",
+  rollupNum: (p, k) => {
+            const r = p[k]?.rollup;
+            if (!r) return null;
+            return typeof r.number === "number" ? r.number : null;
+          },
   files:  (p, k) => (p[k]?.files || []).map(f => ({
             nom: f.name,
             url: f.type === "file" ? f.file?.url : f.external?.url,

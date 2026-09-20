@@ -99,6 +99,7 @@ const MAP = {
     qualiopiDate: v => ({ "Date d obtention Qualiopi": W.date(v) }),
     modalitesAcces: v => ({ "Modalités d accès": W.text(v) }),
     delaisAcces:    v => ({ "Délais d accès": W.text(v) }),
+    accessibilite:  v => ({ "Accessibilité handicap": W.text(v) }),
     implication:    v => ({ "Méthodes d implication des bénéficiaires": W.text(v) }),
     secteurs:       v => ({ "Secteurs d intervention": W.text(v) }),
     validiteDevis:  v => ({ "Validité des devis (jours)": W.num(v) }),

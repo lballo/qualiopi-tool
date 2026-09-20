@@ -390,16 +390,16 @@ const NATURES=["Actions de formation","Bilan de compétences","VAE","Apprentissa
 
 /* Fabrique une fiche formation complète (champs Kaliopi + champs Notion) */
 function mkF(o){const f=Object.assign({
-  nom:"",code:"",duree:7,jours:1,tarif:0,tarifInter:null,typeTarif:"€ HT",supports:0,
+  nom:"",code:"",duree:7,jours:1,tarif:0,tarifInter:null,supports:0,
   categorie:"",tags:[],statutPub:"Non publié",slug:"",accroche:"",presentation:"",metaDesc:"",titreSeo:"",image:"",motsCles:"",
-  objectif:"",objectifsOp:"",publicCible:"",prerequis:"",delais:"Inscription possible jusqu'à 15 jours avant le démarrage.",
-  nsf:"",nature:"Actions de formation",accessibilite:"Notre référente handicap étudie chaque demande pour adapter le parcours (supports adaptés, aménagement des temps, accessibilité des locaux).",
+  objectif:"",objectifsOp:"",publicCible:"",prerequis:"",
+  nsf:"",nature:"Actions de formation",
   pointsForts:"",perimetre:"",participantsMax:null,niveau:"1",
   moyens:{modalites:"",methodes:"",ressources:"",profil:""},
   technique:{locaux:"",locauxPar:[],equip:"",equipPar:[]},
   sanction:"Attestation de fin de formation mentionnant les objectifs, la nature, la durée de l'action et les résultats de l'évaluation des acquis.",
   evalModalites:"",contenu:"",files:{programme:null,deroulePdf:null,supportPart:null,supportForm:null},ressources:[],
-  evalDesc:"",formateurs:["t1"],maj:new Date().toLocaleDateString("sv-SE")},o);
+  formateurs:["t1"],maj:new Date().toLocaleDateString("sv-SE")},o);
   if(!f.files) f.files={programme:null,deroulePdf:null,supportPart:null,supportForm:null};
   if(!f.ressources) f.ressources=[];
   Object.defineProperty(f,"programme",{get(){return !!f.files.programme;},
@@ -456,8 +456,9 @@ const MISE_DISPO=["Le prestataire","Le client","Le sous-traitant","Les bénéfic
 let db = {formations:[],clients:[],formateurs:[],financeurs:[],apprenants:[],sessions:[],
   veilles:[],ameliorations:[],abandons:[],modeles:[],org:{nom:"",forme:"",siret:"",siren:"",nda:"",ndaPrefet:"",ape:"",capital:null,
   tva:"",rcs:"",email:"",tel:"",adresse:"",cp:"",ville:"",region:"",site:"",repNom:"",repQualite:"",
-  qualiopi:false,qualiopiDate:"",modalitesAcces:"",delaisAcces:"",implication:"",secteurs:"",
-  validiteDevis:30,delaiConvoc:10,juridiction:"",docs:{cgv:null,certif:null,logo:null},autres:[]}};
+  qualiopi:false,qualiopiDate:"",modalitesAcces:"",delaisAcces:"",accessibilite:"",implication:"",secteurs:"",
+  validiteDevis:30,delaiConvoc:10,juridiction:"",modeleRi:"",modeleCgv:"",docs:{certif:null,logo:null},autres:[],
+  risques:[],signalements:[],indicateurs:[]}};
 let CLE="";
 const LOT1=["dash","sessions","session-detail","new-session","apprenants","apprenant-detail","inscription","import"];
 
@@ -484,6 +485,7 @@ async function charger(){
   db.financeurs=d.financeurs.map(mkFi);
   db.apprenants=d.apprenants;
   db.modeles=d.modeles||[]; db.veilles=d.veilles||[]; db.ameliorations=d.ameliorations||[]; db.abandons=d.abandons||[];
+  db.risques=d.risques||[]; db.signalements=d.signalements||[]; db.indicateurs=d.indicateurs||[];
   if(d.org) db.org={...db.org,...d.org,docs:{...db.org.docs,...(d.org.docs||{})},autres:d.org.autres||[]};
   db.sessions=d.sessions.map(s=>({...s,
     besoin:s.besoin||{contexte:"",objectifs:"",contraintes:""},
@@ -1048,6 +1050,7 @@ function tabDocuments(s){
     ${ligne("Support formateur","IND 6",f.files?.supportForm,f.urls?.supportForm)}
     ${ligne("Déroulé pédagogique","IND 6",f.files?.deroulePdf,f.urls?.deroulePdf)}
     ${ligne("Convention signée","IND 9",s.conventionFichier,s.conventionUrl,"depConvention")}
+    ${["Distanciel","Hybride","Distanciel synchrone"].includes(s.modalite)?ligne("Traces de connexion à distance","IND 19",s.traces,s.tracesUrl,"depTraces"):""}
     <div class="note" style="margin-top:12px">Les supports et le programme se déposent sur la
       <button class="lnk" data-go="formation-detail" data-param="${s.formationId}">fiche formation</button>,
       ils valent pour toutes ses sessions. Le suivi des convocations et des attestations se fait
@@ -1804,13 +1807,13 @@ function confFormation(f){
   const pts=[
     ["Titre",!!f.nom,"IND 1"],["Durée",!!f.duree,"IND 1"],["Objectif professionnel",!!f.objectif.trim(),"IND 5"],
     ["Objectifs opérationnels",!!f.objectifsOp.trim(),"IND 5"],["Public bénéficiaire",!!f.publicCible.trim(),"IND 1"],
-    ["Prérequis d'accès",!!f.prerequis.trim(),"IND 1"],["Délais d'accès",!!f.delais.trim(),"IND 1"],
-    ["Tarif de référence",!!f.tarif,"IND 1"],["Accessibilité handicap",!!f.accessibilite.trim(),"IND 26"],
+    ["Prérequis d'accès",!!f.prerequis.trim(),"IND 1"],
+    ["Tarif de référence",!!f.tarif,"IND 1"],
     ["Formateur qualifié rattaché",(f.formateurs||[]).length>0,"IND 21"],
     ["Modalités pédagogiques",!!f.moyens.modalites.trim(),"IND 6"],["Méthodes pédagogiques",!!f.moyens.methodes.trim(),"IND 6"],
     ["Ressources pédagogiques",!!f.moyens.ressources.trim(),"IND 6"],["Profil de l'intervenant",!!f.moyens.profil.trim(),"IND 6"],
     ["Contenu de formation",!!f.contenu.trim(),"IND 1, 6"],["Déroulé pédagogique déposé",f.deroulePdf,"IND 6"],
-    ["Évaluations décrites",!!f.evalDesc.trim(),"IND 11"],["Modalités d'évaluation",!!f.evalModalites.trim(),"IND 11"],
+    ["Modalités d'évaluation",!!f.evalModalites.trim(),"IND 11"],
     ["Programme PDF déposé",f.programme,"IND 1"],["Support participant déposé",f.supportPart,"IND 6"],
     ["Locaux décrits",!!f.technique.locaux.trim(),"IND 17"],["Équipements décrits",!!f.technique.equip.trim(),"IND 17"],
     ["Sanction de la formation",!!f.sanction.trim(),"IND 1"],
@@ -1896,11 +1899,9 @@ function fInfos(f){
       <div class="fld"><label>Prérequis d'accès <span class="ind">IND 1</span></label><textarea data-f="prerequis">${esc(f.prerequis)}</textarea>
         <div class="h">Si pas de prérequis, notez « Aucun prérequis »</div></div>
     </div>
-    <div class="fld"><label>Délais d'accès <span class="ind">IND 1</span></label><input type="text" data-f="delais" value="${esc(f.delais)}"></div>
     <div class="g3">
       <div class="fld"><label>Tarif intra <span class="ind">IND 1</span></label><input type="number" data-f="tarif" value="${f.tarif}"></div>
       <div class="fld"><label>Tarif inter (par personne)</label><input type="number" data-f="tarifInter" value="${f.tarifInter??""}"></div>
-      <div class="fld"><label>Type de tarif</label><select data-f="typeTarif">${["€ HT","€ TTC","€ HT / jour"].map(t=>`<option ${f.typeTarif===t?"selected":""}>${t}</option>`).join("")}</select></div>
     </div>
     <div class="g2">
       <div class="fld"><label>Code NSF</label><select data-f="nsf"><option value="">Sélectionnez la spécialité</option>${NSF.map(n=>`<option ${f.nsf===n?"selected":""}>${esc(n)}</option>`).join("")}</select>
@@ -1908,8 +1909,7 @@ function fInfos(f){
       <div class="fld"><label>Nature de l'action</label><select data-f="nature">${NATURES.map(n=>`<option ${f.nature===n?"selected":""}>${n}</option>`).join("")}</select>
         <div class="h">Article L.6313-1 du Code du travail (BPF)</div></div>
     </div>
-    <div class="fld"><label>Accessibilité aux personnes en situation de handicap <span class="ind">IND 26</span></label>
-      <textarea data-f="accessibilite">${esc(f.accessibilite)}</textarea></div>
+    <div class="note" style="margin:6px 0 14px">Modalités d'accès, délais d'accès et accessibilité handicap sont communs à toutes vos formations : ils se renseignent une seule fois dans <b>Mon organisme</b>, onglet « Accès &amp; paramètres ».</div>
     <div class="fld"><label>Sanction de la formation <span class="ind">IND 1</span></label>
       <textarea data-f="sanction" style="min-height:64px">${esc(f.sanction)}</textarea>
       <div class="h">Ce que le stagiaire obtient à l'issue : attestation, certificat, titre…</div></div>
@@ -1991,8 +1991,6 @@ function fEvals(f){
   return `<div class="card"><div class="chead"><div><div class="ct">Évaluations <span class="ind">IND 11</span></div>
     <div class="cd">Décrivez comment les acquis sont vérifiés.</div></div>
     <div class="sp"><button class="btn pri sm" data-act="saveF">Enregistrer</button></div></div>
-    <div class="fld"><label>Description des évaluations formatives</label>
-      <textarea data-f="evalDesc" placeholder="Quiz de positionnement en début de formation, évaluation continue par exercices pratiques, QCM final de validation des acquis.">${esc(f.evalDesc)}</textarea></div>
     <div class="fld"><label>Modalités d'évaluation <span class="ind">IND 11</span></label>
       <textarea data-f="evalModalites" placeholder="Test de positionnement à l'entrée • évaluations formatives • QCM et étude de cas en fin de formation • satisfaction à chaud • évaluation à froid à J+90">${esc(f.evalModalites)}</textarea></div>
   </div>
@@ -2050,7 +2048,7 @@ afterRender["formation-detail"]=()=>{
       if(k.includes(".")){const[a,b]=k.split(".");f[a][b]=v;}else f[k]=v;};
     if(el.tagName==="TEXTAREA"||el.type==="text") el.oninput=()=>set(el.value);
     else el.onchange=()=>{set(el.type==="number"?(el.value===""?null:+el.value):el.value);
-      if(["statutPub","slug","categorie","modalite","typeTarif","nsf","nature"].includes(k)) render();};
+      if(["statutPub","slug","categorie","modalite","nsf","nature"].includes(k)) render();};
   });
   const PROP_F={programme:"Programme PDF",deroulePdf:"Déroulé pédagogique (fichier)",
     supportPart:"Support participant",supportForm:"Support formateur"};
@@ -2685,7 +2683,9 @@ function vOrganisme(){
   const req=[["Nom",!!o.nom],["SIRET",!!o.siret],["NDA",!!o.nda],["Représentant légal",!!o.repNom],
     ["Adresse complète",!!(o.adresse&&o.cp&&o.ville)],["Modalités d'accès",!!o.modalitesAcces.trim()],
     ["Délais d'accès",!!o.delaisAcces.trim()],["Méthodes d'implication",!!o.implication.trim()],
-    ["Secteurs d'intervention",!!o.secteurs.trim()],["Règlement intérieur (Modèles)",db.modeles.some(m=>m.type==="Règlement intérieur"&&m.statut==="Actif")],["CGV",!!o.docs.cgv]];
+    ["Secteurs d'intervention",!!o.secteurs.trim()],["Accessibilité handicap",!!(o.accessibilite||"").trim()],
+    ["Règlement intérieur (Modèles)",db.modeles.some(m=>m.type==="Règlement intérieur"&&m.statut==="Actif")],
+    ["CGV (Modèles)",db.modeles.some(m=>m.type==="Conditions générales de vente"&&m.statut==="Actif")]];
   const manque=req.filter(r=>!r[1]);
   return head(I.organisme,"Mon organisme","Fiche d'identité et documents de votre organisme",
     `<span class="tag ${manque.length?"warn":"ok"}">${req.length-manque.length} / ${req.length} renseignés</span>`)+
@@ -2758,6 +2758,13 @@ function oAcces(o){
       <textarea data-o="delaisAcces" style="min-height:90px" placeholder="Ex : les inscriptions sont possibles jusqu'à 15 jours avant le début de la formation…">${esc(o.delaisAcces)}</textarea>
       <div class="h">Le délai entre la demande et l'entrée en formation, avec ce qui le conditionne (dossier complet, accord de financement). Donnez une fourchette chiffrée : c'est ce qu'un auditeur vérifie.</div></div>
   </div>
+  <div class="card"><div class="chead"><div><div class="ct">Accessibilité handicap <span class="ind">IND 1, 26</span></div>
+    <div class="cd">Texte commun à toutes vos formations</div></div>
+    <div class="sp"><button class="btn pri sm" data-act="saveOrg">Enregistrer</button></div></div>
+    <div class="fld"><label>Accueil des personnes en situation de handicap</label>
+      <textarea data-o="accessibilite" style="min-height:100px" placeholder="Ex : nos formations sont accessibles aux personnes en situation de handicap. Contactez notre référente handicap avant l'inscription pour étudier les adaptations possibles…">${esc(o.accessibilite||"")}</textarea>
+      <div class="h">Nommez la référente handicap et son contact, les adaptations possibles, et les partenaires vers lesquels vous orientez. Ce texte est repris sur chaque page formation, dans les programmes et dans les convocations.</div></div>
+  </div>
   <div class="card"><div class="chead"><div><div class="ct">Paramètres par défaut</div>
     <div class="cd">Devis, conventions, juridiction</div></div>
     <div class="sp"><button class="btn pri sm" data-act="saveOrg">Enregistrer</button></div></div>
@@ -2779,10 +2786,76 @@ function oAcces(o){
       <div class="h">Les secteurs sur lesquels porte votre veille métier.</div></div>
   </div>`;
 }
+/* ─── Indicateurs de résultats publiés (IND 2) ─── */
+function qIndicateurs(){
+  const ind=(db.indicateurs||[]).filter(i=>i.perimetre==="Toutes formations");
+  const calcul=ind[0]?.calcul||"";
+  return `<div class="card"><div class="chead"><div><div class="ct">Indicateurs de résultats <span class="ind">IND 2</span></div>
+    <div class="cd">Calculés automatiquement chaque mois sur 12 mois glissants, à partir de vos sessions, évaluations et questionnaires. Rien à saisir ici.</div></div>
+    <div class="sp">${calcul?`<span class="tag neutral">Calcul du ${fmtDShort(calcul)}</span>`:""}</div></div>
+    ${ind.length?`<div class="tw"><table><thead><tr><th>Indicateur</th><th>Résultat affiché</th><th>Base de calcul</th><th>Publiable</th></tr></thead><tbody>
+      ${ind.map(i=>`<tr><td><b>${esc(i.indicateur)}</b></td><td>${esc(i.texte||"—")}</td>
+        <td class="s">${i.denominateur!=null?`${i.numerateur??0} / ${i.denominateur}`:"—"}</td>
+        <td><span class="tag ${i.publiable?"ok":"warn"}">${i.publiable?"Oui":"Effectif trop faible"}</span></td></tr>`).join("")}
+    </tbody></table></div>
+    <div class="note" style="margin-top:10px">Périmètre : sessions dont vous êtes l'organisme (Envois = Automatique), terminées sur la période. Sous 10 réponses, le chiffre n'est pas publié : l'auditeur attend un résultat représentatif, pas un pourcentage calculé sur deux avis.</div>`
+    :`<div class="empty" style="padding:28px"><div class="e">${I.organisme}</div><b>Aucun calcul pour l'instant</b>
+      <p>Le workflow « Indicateurs de résultats » s'exécute le 1er de chaque mois et remplit cette section.</p></div>`}
+  </div>`;
+}
+
+/* ─── Analyse des risques (IND 32) ─── */
+function qRisques(){
+  const r=(db.risques||[]);
+  const chauds=r.filter(x=>(x.criticite||0)>=6).length;
+  const aRevoir=r.filter(x=>x.prochaineRevue&&x.prochaineRevue<new Date().toISOString().slice(0,10)).length;
+  return `<div class="card"><div class="chead"><div><div class="ct">Analyse des risques <span class="ind">IND 32</span></div>
+    <div class="cd">Exigence du référentiel applicable au 1er novembre 2026 : les risques pouvant dégrader la qualité des prestations, leur cotation et les mesures de maîtrise.</div></div>
+    <div class="sp">${chauds?`<span class="tag warn">${chauds} risque${chauds>1?"s":""} à criticité élevée</span>`:""}
+      ${aRevoir?`<span class="tag warn">${aRevoir} revue${aRevoir>1?"s":""} en retard</span>`:""}</div></div>
+    ${r.length?`<div class="tw"><table><thead><tr><th>Risque</th><th>Catégorie</th><th>Criticité</th><th>Mesure de maîtrise</th><th>Statut</th><th>Prochaine revue</th></tr></thead><tbody>
+      ${r.map(x=>`<tr><td><b>${esc(x.risque)}</b><div class="s">${esc(x.cause||"")}</div></td>
+        <td class="s">${esc(x.categorie||"—")}</td>
+        <td><span class="tag ${(x.criticite||0)>=6?"warn":"neutral"}">${x.criticite??"—"}</span></td>
+        <td class="s">${esc(x.mesures||x.action||"—")}</td>
+        <td><span class="tag ${x.statut==="Maîtrisé"?"ok":"neutral"}">${esc(x.statut||"—")}</span></td>
+        <td class="s">${x.prochaineRevue?fmtDShort(x.prochaineRevue):"—"}</td></tr>`).join("")}
+    </tbody></table></div>`
+    :`<div class="empty" style="padding:28px"><div class="e">${I.organisme}</div><b>Aucun risque identifié</b>
+      <p>La cartographie des risques est attendue par l'auditeur : indisponibilité de la formatrice, panne des automatisations, salle inadaptée, contenus obsolètes…</p></div>`}
+    <div class="note" style="margin-top:10px">Les risques se créent et se cotent dans la base Notion « ⚠️ Analyse des risques ». Cette vue est en lecture seule.</div>
+  </div>`;
+}
+
+/* ─── Registre des signalements (IND 12) ─── */
+function qSignalements(){
+  const g=(db.signalements||[]);
+  const ouverts=g.filter(x=>x.statut!=="Clos").length;
+  const sansAr=g.filter(x=>!x.accuse).length;
+  return `<div class="card"><div class="chead"><div><div class="ct">Signalements — violences, harcèlement, discriminations <span class="ind">IND 12</span></div>
+    <div class="cd">Suivi du traitement uniquement. Le détail des signalements reste dans la base Notion à accès restreint : aucun nom n'est affiché ici.</div></div>
+    <div class="sp">${ouverts?`<span class="tag warn">${ouverts} en cours</span>`:`<span class="tag ok">Aucun en cours</span>`}
+      ${sansAr?`<span class="tag warn">${sansAr} sans accusé de réception</span>`:""}</div></div>
+    ${g.length?`<div class="tw"><table><thead><tr><th>Référence</th><th>Reçu le</th><th>Canal</th><th>Type</th><th>Accusé de réception</th><th>Entretiens</th><th>Statut</th></tr></thead><tbody>
+      ${g.map(x=>`<tr><td><b>${esc(x.reference||"—")}</b></td>
+        <td class="s">${x.date?fmtDShort(x.date):"—"}</td>
+        <td class="s">${esc(x.canal||"—")}</td>
+        <td class="s">${esc(x.type||"—")}</td>
+        <td>${x.accuse?`<span class="tag ok">${fmtDShort(x.accuse)}</span>`:`<span class="tag warn">à envoyer</span>`}</td>
+        <td>${x.entretiens?"✓":"—"}</td>
+        <td><span class="tag ${x.statut==="Clos"?"ok":"warn"}">${esc(x.statut||"Reçu")}</span></td></tr>`).join("")}
+    </tbody></table></div>`
+    :`<div class="empty" style="padding:28px"><div class="e">${I.organisme}</div><b>Aucun signalement</b>
+      <p>Un registre vide est une preuve valable : il montre que le dispositif existe et qu'aucune situation n'a été signalée.</p></div>`}
+    <div class="note" style="margin-top:10px">Rappel du circuit : accusé de réception sous 48 heures ouvrées, mesures de protection immédiates, entretiens, puis bilan anonymisé en amélioration continue.</div>
+  </div>`;
+}
+
 function oQualite(o){
   const acts=db.ameliorations.slice().sort((a,b)=>(b.date||"").localeCompare(a.date||""));
+  const enTete=qIndicateurs()+qRisques()+qSignalements();
   const ouvertes=acts.filter(a=>a.statut!=="Efficacité vérifiée").length;
-  return `<div class="card"><div class="chead"><div><div class="ct">Amélioration continue <span class="ind">IND 30-32</span></div>
+  return enTete+`<div class="card"><div class="chead"><div><div class="ct">Amélioration continue <span class="ind">IND 30-32</span></div>
     <div class="cd">Réclamations, suggestions, difficultés et non-conformités, avec les actions engagées.</div></div>
     <div class="sp">${acts.length?`<span class="tag ${ouvertes?"warn":"ok"}">${ouvertes} ouverte${ouvertes>1?"s":""}</span>`:""}
       <button class="btn pri sm" data-act="showAddAm">+ Nouvelle action</button></div></div>
@@ -2911,13 +2984,21 @@ function oQualite(o){
   </div>`;
 }
 function oDocs(o){
-  const docs=[["cgv","Conditions générales de vente","","PDF uniquement, max 10 Mo"],
-    ["logo","Logo","","Appliqué à tous vos documents"]];
+  const docs=[["logo","Logo","","Appliqué à tous vos documents"]];
+  const modele=(type)=>db.modeles.find(m=>m.type===type&&m.statut==="Actif");
   return `<div class="card"><div class="ct">Personnalisation des documents</div>
     <div class="note" style="margin-top:8px">Les documents Qualiopi (émargements, attestations, conventions, convocations) sont générés à partir des informations de votre organisme, dans une mise en page conforme au référentiel. Vous personnalisez le logo, la couleur de marque, et pouvez remplacer le règlement intérieur et les CGV par vos propres PDF.</div>
   </div>
   <div class="card"><div class="ct">Documents cadres <span class="ind">IND 9</span></div>
-    <div class="cd" style="margin-bottom:12px">Remplacez un document généré par le vôtre. Le règlement intérieur se gère dans <b>Modèles</b> : sa page Notion est mise en PDF et jointe à chaque convocation.</div>
+    <div class="cd" style="margin-bottom:12px">Remplacez un document généré par le vôtre.</div>
+    ${[["Règlement intérieur","joint à chaque convocation"],["Conditions générales de vente","annexées aux devis et conventions"]].map(([t,quoi])=>{
+      const m=modele(t);
+      return `<div class="docrow">
+        <div class="di"><b>${t}</b><span class="ind" style="margin-left:6px">IND 9</span>
+          <span class="s">${m?`Version ${esc(m.version||"—")} — ${quoi}`:"Aucun modèle actif dans Modèles"}</span></div>
+        <div class="dv"><span class="tag ${m?"ok":"warn"}">${m?"Géré dans Modèles":"À créer"}</span></div>
+        <div class="da"><button class="btn sec sm" data-go="${m?"modele-detail":"modeles"}" ${m?`data-param="${m.id}"`:""}>Ouvrir</button></div>
+      </div>`;}).join("")}
     ${docs.map(([k,lbl,ind,hint])=>`<div class="docrow">
       <div class="di"><b>${lbl}</b>${ind?`<span class="ind" style="margin-left:6px">${ind}</span>`:""}
         <span class="s">${o.docs[k]?"📎 "+esc(o.docs[k]):hint}</span></div>
@@ -2946,8 +3027,7 @@ afterRender.organisme=()=>{
     if(el.tagName==="TEXTAREA"||el.type==="text"||el.type==="email") el.oninput=()=>{db.org[k]=el.value;};
     else el.onchange=()=>{db.org[k]=el.type==="number"?(el.value===""?null:+el.value):el.value;render();};
   });
-  const PROP_O={cgv:"Conditions générales de vente",
-    certif:"Certificat Qualiopi",logo:"Logo"};
+  const PROP_O={certif:"Certificat Qualiopi",logo:"Logo"};
   $$("[data-ofile]").forEach(el=>el.onchange=()=>{
     const f=el.files?.[0]; if(!f)return;
     const k=el.dataset.ofile;
@@ -3091,6 +3171,8 @@ const ACT={
   depConvention:()=>{const s=SE(route.param);
     if(s.convention){toast("Retirez le fichier depuis Notion");return;}
     choisirFichier(f=>televerser(f,s.id,"Convention signée",()=>{s.convention=true;s.conventionFichier=f.name;}));},
+  depTraces:()=>{const s=SE(route.param); if(!s) return;
+    choisirFichier(f=>televerser(f,s.id,"Traces de connexion",()=>{s.traces=f.name;}));},
   depProgramme:()=>{const s=SE(route.param),f=F(s.formationId);
     if(!f){toast("Aucune formation rattachée");return;}
     if(f.programme){toast("Programme déjà déposé");return;}
@@ -3407,9 +3489,9 @@ const ACT={
     pousser("catalogue",{action:"maj",id:f.id,champs:{
       nom:f.nom,code:f.code,duree:f.duree,jours:f.jours,modalite:f.modalite,categorie:f.categorie,
       accroche:f.accroche,presentation:f.presentation,objectif:f.objectif,objectifsOp:f.objectifsOp,publicCible:f.publicCible,
-      prerequis:f.prerequis,delais:f.delais,tarif:f.tarif,tarifInter:f.tarifInter,typeTarif:f.typeTarif,
-      nsf:f.nsf,nature:f.nature,accessibilite:f.accessibilite,sanction:f.sanction,contenu:f.contenu,
-      evalDesc:f.evalDesc,evalModalites:f.evalModalites,statutPub:f.statutPub,slug:f.slug,
+      prerequis:f.prerequis,tarif:f.tarif,tarifInter:f.tarifInter,
+      nsf:f.nsf,nature:f.nature,sanction:f.sanction,contenu:f.contenu,
+      evalModalites:f.evalModalites,statutPub:f.statutPub,slug:f.slug,
       titreSeo:f.titreSeo,metaDesc:f.metaDesc,image:f.image,motsCles:f.motsCles,pointsForts:f.pointsForts,
       tags:f.tags,formateurs:f.formateurs,
       "moyens.modalites":f.moyens.modalites,"moyens.methodes":f.moyens.methodes,
@@ -3634,7 +3716,7 @@ const ACT={
       ape:o.ape,capital:o.capital,tva:o.tva,rcs:o.rcs,email:o.email,tel:o.tel,
       adresse:o.adresse,cp:o.cp,ville:o.ville,region:o.region,site:o.site,
       repNom:o.repNom,repQualite:o.repQualite,qualiopi:o.qualiopi,qualiopiDate:o.qualiopiDate,
-      modalitesAcces:o.modalitesAcces,delaisAcces:o.delaisAcces,implication:o.implication,
+      modalitesAcces:o.modalitesAcces,delaisAcces:o.delaisAcces,accessibilite:o.accessibilite,implication:o.implication,
       secteurs:o.secteurs,validiteDevis:o.validiteDevis,delaiConvoc:o.delaiConvoc,
       juridiction:o.juridiction,couleur:o.couleur}},"Fiche organisme enregistrée")
       .then(r=>{ if(r?.id) db.org.id=r.id; render(); }).catch(()=>{});},

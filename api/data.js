@@ -10,6 +10,7 @@ module.exports = handler(async (req, res) => {
     sessionsR, creneauxR, participantsR, apprenantsR,
     formationsR, entreprisesR, collabsR, financeursR,
     contactsR, documentsR, echangesR, veilleR, ameliorationsR, competencesR, organismeR, emargementsR, evaluationsR, abandonsR, modelesR,
+    risquesR, signalementsR, indicateursR,
   ] = await Promise.all([
     queryAll(DB.sessions),
     queryAll(DB.creneaux),
@@ -30,6 +31,9 @@ module.exports = handler(async (req, res) => {
     queryAll(DB.evaluations).catch(() => []),
     queryAll(DB.abandons).catch(() => []),
     queryAll(DB.modeles).catch(() => []),
+    queryAll(DB.risques).catch(() => []),
+    queryAll(DB.signalements).catch(() => []),
+    queryAll(DB.indicateurs, { filter: { property: "Statut", select: { equals: "Actuel" } } }).catch(() => []),
   ]);
 
   const id = p => p.id.replace(/-/g, "");
@@ -51,7 +55,6 @@ module.exports = handler(async (req, res) => {
       tags: P.multi(x, "Tags"),
       programme: P.files(x, "Programme PDF").length > 0,
       supports: P.files(x, "Support participant").length + P.files(x, "Support formateur").length,
-      typeTarif: P.select(x, "Type de tarif") || "€ HT",
       categorie: P.select(x, "Catégorie"),
       accroche: P.text(x, "Accroche"),
       presentation: P.text(x, "Présentation"),
@@ -59,13 +62,12 @@ module.exports = handler(async (req, res) => {
       objectifsOp: P.text(x, "Objectifs opérationnels"),
       publicCible: P.text(x, "Public cible"),
       prerequis: P.text(x, "Prérequis"),
-      delais: P.text(x, "Délais d'accès"),
       nsf: P.text(x, "Code NSF"),
       nature: P.select(x, "Nature de l action") || "Action de formation",
-      accessibilite: P.text(x, "Accessibilité handicap"),
       sanction: P.text(x, "Sanction de la formation"),
       contenu: P.text(x, "Contenu de formation"),
-      evalDesc: P.text(x, "Évaluations formatives (description)"),
+      avisNote: P.rollupNum(x, "Satisfaction moyenne /5"),
+      avisNb: P.rollupNum(x, "Nombre d'avis"),
       evalModalites: P.text(x, "Modalités d évaluation"),
       titreSeo: P.text(x, "Titre SEO"),
       metaDesc: P.text(x, "Méta-description"),
@@ -425,6 +427,9 @@ module.exports = handler(async (req, res) => {
       convention: P.files(x, "Convention signée").length > 0,
       conventionFichier: P.files(x, "Convention signée")[0]?.nom || null,
       conventionUrl: P.files(x, "Convention signée")[0]?.url || "",
+      /* Ind. 19 — preuve du suivi effectif des séquences à distance */
+      traces: P.files(x, "Traces de connexion")[0]?.nom || "",
+      tracesUrl: P.files(x, "Traces de connexion")[0]?.url || "",
       /* La date d'envoi n'existe que sur les participants : une session est
          « convoquée » quand tous ses inscrits ont une date d'envoi. */
       convocation: inscrits.length > 0 && inscrits.every(i => i.convoc),
@@ -560,9 +565,12 @@ module.exports = handler(async (req, res) => {
     validiteDevis: P.num(o, "Validité des devis (jours)"),
     delaiConvoc: P.num(o, "Délai d envoi des convocations (jours)"),
     juridiction: P.text(o, "Juridiction compétente"),
+    /* Règlement intérieur et CGV : gérés dans 📝 Modèles, reliés depuis Mon organisme. */
+    modeleRi: P.rel1(o, "📝 Règlement intérieur"),
+    modeleCgv: P.rel1(o, "📝 Conditions générales de vente"),
     couleur: P.text(o, "Couleur de marque"),
+    accessibilite: P.text(o, "Accessibilité handicap"),
     docs: {
-      cgv: P.files(o, "Conditions générales de vente")[0]?.nom || null,
       certif: P.files(o, "Certificat Qualiopi")[0]?.nom || null,
       logo: P.files(o, "Logo")[0]?.nom || null,
     },
@@ -589,10 +597,77 @@ module.exports = handler(async (req, res) => {
     };
   }).sort((a, b) => a.type.localeCompare(b.type) || a.nom.localeCompare(b.nom));
 
+  /* ── Analyse des risques (Ind. 32) ── */
+  const risques = risquesR.map(p => {
+    const x = p.properties;
+    return {
+      id: id(p),
+      numero: P.num(x, "N°"),
+      risque: P.title(x, "Risque"),
+      categorie: P.select(x, "Catégorie"),
+      cause: P.text(x, "Cause"),
+      probabilite: P.select(x, "Probabilité"),
+      impact: P.select(x, "Impact"),
+      criticite: P.formula(x, "Criticité"),
+      niveau: P.formula(x, "Niveau"),
+      mesures: P.text(x, "Mesures déjà en place"),
+      action: P.text(x, "Action proposée"),
+      responsable: P.text(x, "Responsable"),
+      statut: P.select(x, "Statut"),
+      derniereRevue: P.date(x, "Date de dernière revue"),
+      prochaineRevue: P.date(x, "Prochaine revue"),
+      url: p.url || "",
+    };
+  }).sort((a, b) => (b.criticite || 0) - (a.criticite || 0));
+
+  /* ── Registre des signalements (Ind. 12) ──
+     Volontairement non nominatif ici : le panel n'affiche que le suivi.
+     Le détail reste dans la base Notion à accès restreint. */
+  const signalements = signalementsR.map(p => {
+    const x = p.properties;
+    return {
+      id: id(p),
+      reference: P.title(x, "Référence"),
+      date: P.date(x, "Date de réception"),
+      canal: P.select(x, "Canal"),
+      type: P.select(x, "Type de signalement"),
+      nature: P.multi(x, "Nature"),
+      accuse: P.date(x, "Accusé de réception envoyé le"),
+      entretiens: P.check(x, "Entretiens réalisés"),
+      statut: P.select(x, "Statut"),
+      cloture: P.date(x, "Date de clôture"),
+      bilan: P.check(x, "Bilan anonymisé reporté en amélioration continue"),
+      url: p.url || "",
+    };
+  }).sort((a, b) => (b.date || "").localeCompare(a.date || ""));
+
+  /* ── Indicateurs de résultats publiés (Ind. 2), calculés chaque mois par n8n ── */
+  const indicateurs = indicateursR.map(p => {
+    const x = p.properties;
+    return {
+      id: id(p),
+      libelle: P.title(x, "Libellé"),
+      indicateur: P.select(x, "Indicateur"),
+      perimetre: P.select(x, "Périmètre"),
+      formationId: P.rel1(x, "📚 Formation"),
+      valeur: P.num(x, "Valeur"),
+      unite: P.select(x, "Unité"),
+      numerateur: P.num(x, "Numérateur"),
+      denominateur: P.num(x, "Dénominateur"),
+      texte: P.text(x, "Texte affiché"),
+      publiable: P.check(x, "Chiffre publiable"),
+      methode: P.text(x, "Méthode de calcul"),
+      du: P.date(x, "Période du"),
+      au: P.date(x, "Période au"),
+      calcul: P.date(x, "Date de calcul"),
+      url: p.url || "",
+    };
+  });
+
   res.status(200).json({
     ok: true,
     charge: new Date().toISOString(),
     formations, clients, formateurs, financeurs, apprenants, sessions,
-    veilles, ameliorations, org, abandons, modeles,
+    veilles, ameliorations, org, abandons, modeles, risques, signalements, indicateurs,
   });
 });
