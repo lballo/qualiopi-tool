@@ -462,8 +462,31 @@ let db = {formations:[],clients:[],formateurs:[],financeurs:[],apprenants:[],ses
 let CLE="";
 const LOT1=["dash","sessions","session-detail","new-session","apprenants","apprenant-detail","inscription","import"];
 
-/* ── Appels API ── */
-async function api(chemin, corps){
+/* ── Appels API ──
+   Anti double-soumission : Notion met 1 à 2 s à répondre, et un double-clic
+   (ou un second clic par impatience) envoyait deux fois la même création —
+   d'où les participants et entreprises en double. Une demande d'écriture
+   strictement identique à une demande encore en cours est ignorée : le
+   second clic ne fait rien, le premier termine normalement. Pour les
+   créations, ce verrou tient encore 5 s après la réponse (une mise à jour,
+   elle, doit pouvoir être renvoyée aussitôt). */
+const ENVOIS_EN_COURS=new Map();
+const CREATIONS=["creer","inscrire","importer"];
+function api(chemin, corps){
+  if(!corps) return appelApi(chemin);
+  const cle=chemin+"|"+JSON.stringify(corps);
+  if(ENVOIS_EN_COURS.has(cle)){
+    toast("Enregistrement déjà en cours…");
+    return new Promise(()=>{});   /* jamais résolue : le second clic s'arrête là */
+  }
+  const p=appelApi(chemin,corps);
+  ENVOIS_EN_COURS.set(cle,p);
+  const garde=CREATIONS.includes(corps.action)?5000:0;
+  p.then(()=>setTimeout(()=>ENVOIS_EN_COURS.delete(cle),garde),
+         ()=>ENVOIS_EN_COURS.delete(cle));
+  return p;
+}
+async function appelApi(chemin, corps){
   const r=await fetch("/api/"+chemin,{
     method: corps?"POST":"GET",
     headers:{"x-cle":CLE,...(corps?{"Content-Type":"application/json"}:{})},

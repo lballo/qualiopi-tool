@@ -4,8 +4,31 @@ const { notion, queryAll, P, W, DB, handler, readBody } = require("./_notion");
 const nomComplet = a => [a.nom, a.prenom].filter(Boolean).join(" ").trim() || "Sans nom";
 const aujourdhui = () => new Date().toISOString().slice(0, 10);
 
+/* Verrou session × apprenant, gardé quelques secondes en mémoire.
+   La vérification « déjà inscrit ? » interroge Notion, qui n'indexe une page
+   neuve qu'avec un peu de retard : deux demandes arrivées à quelques ms
+   d'écart passaient toutes les deux et créaient deux fiches (cas du 3 sept.,
+   2 fiches à 2 ms d'écart). Le verrou bloque la seconde tant que la première
+   n'est pas visible dans Notion. */
+const VERROUS = new Map();
+const DUREE_VERROU = 15000;
+
 /* Crée la fiche Participant (= inscription) pour un apprenant sur une session */
 async function inscrire(sessionId, apprenant, options = {}) {
+  const cle = `${sessionId}|${apprenant.id}`.replace(/-/g, "");
+  for (const [k, v] of VERROUS) if (Date.now() - v.t > DUREE_VERROU) VERROUS.delete(k);
+  const enCours = VERROUS.get(cle);
+  if (enCours && Date.now() - enCours.t < DUREE_VERROU) {
+    const r = await enCours.p.catch(() => null);
+    if (r) return { id: r.id, existait: true };
+  }
+  const p = creerInscription(sessionId, apprenant, options);
+  VERROUS.set(cle, { t: Date.now(), p });
+  try { return await p; }
+  catch (e) { VERROUS.delete(cle); throw e; }
+}
+
+async function creerInscription(sessionId, apprenant, options) {
   const dejaLa = await queryAll(DB.participants, {
     filter: {
       and: [
