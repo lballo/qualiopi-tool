@@ -435,6 +435,8 @@ module.exports = handler(async (req, res) => {
       convocation: inscrits.length > 0 && inscrits.every(i => i.convoc),
       /* Mode d'envoi de la session. Vide = Manuel : rien ne part seul. */
       envois: P.select(x, "Envois") || "Manuel",
+      /* Vide (sessions créées avant le champ) = organisée par Laura Ballo Coaching */
+      organisateur: P.select(x, "Organisateur") || "Laura Ballo Coaching",
       organismeConvocateur: P.text(x, "Organisme convocateur"),
       besoin: {
         contexte: P.text(x, "Analyse du besoin — contexte"),

@@ -59,6 +59,9 @@ module.exports = handler(async (req, res) => {
         "💶 Financeur": W.rel(s.financeurId ? [s.financeurId] : []),
         "Envois": W.select(s.envois || "Manuel"),
         "Organisme convocateur": W.text(s.organismeConvocateur || ""),
+        /* Ind. 2 : seules les sessions organisées par Laura Ballo Coaching
+           entrent dans les indicateurs de résultats publiés. */
+        "Organisateur": W.select(s.organisateur || "Laura Ballo Coaching"),
       },
     });
     const sessionId = page.id.replace(/-/g, "");
@@ -88,6 +91,7 @@ module.exports = handler(async (req, res) => {
       modalite:     v => ({ "Modalité": W.select(v) }),
       notes:        v => ({ "Notes internes": W.text(v) }),
       envois: v => ({ "Envois": W.select(v) }),
+      organisateur: v => ({ "Organisateur": W.select(v) }),
       organismeConvocateur: v => ({ "Organisme convocateur": W.text(v) }),
       formationId:  v => ({ "Formation": W.rel(v ? [v] : []) }),
       clientId:     v => ({ "Entreprise": W.rel(v ? [v] : []) }),

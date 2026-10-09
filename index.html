@@ -816,7 +816,7 @@ const STD=[["Matin","09:00","12:30"],["Après-midi","13:30","17:00"],["Soirée",
 function vNewSession(){
   if(!draft) draft={formationId:db.formations[0].id,clientId:db.clients[0].id,formateurId:db.formateurs[0].id,
     type:"INTRA",code:String(db.sessions.length+1),lieu:"",titre:"",financeurId:"",modalites:["Présentiel"],
-    envois:"Manuel",organismeConvocateur:"",
+    envois:"Manuel",organismeConvocateur:"",organisateur:"Laura Ballo Coaching",
     creneaux:(j=>[{date:j,type:"Matin",d:"09:00",f:"12:30"},{date:j,type:"Après-midi",d:"13:30",f:"17:00"}])(dateProchaine())};
   return head(I.sessionNew,"Nouvelle session","Créez une session de formation et son planning",
     `<button class="btn sec" data-go="sessions">← Retour</button>`)+
@@ -840,6 +840,10 @@ function vNewSession(){
      <select data-d="financeurId"><option value="">— Aucun / fonds propres —</option>
      ${db.financeurs.map(f=>`<option value="${f.id}" ${draft.financeurId===f.id?"selected":""}>${esc(f.nom)}</option>`).join("")}</select>
      <div class="h">Sert à la demande de prise en charge et rappelle le délai de dépôt.</div></div>
+   <div class="fld"><label>Organisateur de la session <span class="ind">IND 2</span></label>
+     <label class="ck" style="max-width:none"><input type="checkbox" data-dorg="organisateur" ${draft.organisateur!=="Autre organisme"?"checked":""}>
+       Session organisée par Laura Ballo Coaching</label>
+     <div class="h">Coché, la session et ses stagiaires comptent dans les indicateurs de résultats publiés sur le site (stagiaires formés, satisfaction, abandons…). Décochez quand un autre organisme de formation porte la session : c'est lui qui publie ses résultats. Indépendant du mode d'envoi ci-dessous.</div></div>
    <div class="fld"><label>Mode d'envoi des documents <span class="ind">IND 9</span></label>
      <label class="ck" style="max-width:none"><input type="checkbox" data-dck="envois" ${draft.envois==="Automatique"?"checked":""}>
        Envois automatiques \u2014 je suis l'organisme de formation</label>
@@ -871,6 +875,8 @@ afterRender["new-session"]=()=>{
   $$("[data-dck]").forEach(el=>el.onchange=()=>{
     draft[el.dataset.dck]=el.checked?"Automatique":"Manuel";
     if(el.checked) draft.organismeConvocateur=""; render();});
+  $$("[data-dorg]").forEach(el=>el.onchange=()=>{
+    draft.organisateur=el.checked?"Laura Ballo Coaching":"Autre organisme"; render();});
   $$("[data-mod]").forEach(el=>el.onchange=()=>{
     const m=el.dataset.mod;
     draft.modalites=el.checked?[...draft.modalites,m]:draft.modalites.filter(x=>x!==m);});
@@ -932,6 +938,21 @@ function blocEnvois(s){
       ${bouton("Automatique","Automatique","Je suis l'organisme de formation : tout part aux dates pr\u00e9vues")}
       ${bouton("Manuel","Manuel","Un autre organisme g\u00e8re : rien ne part seul, mais je peux tout d\u00e9clencher")}
     </div>
+  </div>
+  ${blocOrganisateur(s)}`;
+}
+
+/* Organisateur de la session (ind. 2). Pilote le périmètre des indicateurs
+   de résultats publiés sur le site : une session passée peut y entrer sans
+   que ses envois automatiques soient activés. */
+function blocOrganisateur(s){
+  const moi = (s.organisateur||"Laura Ballo Coaching") !== "Autre organisme";
+  return `<div style="display:flex;gap:14px;align-items:center;padding:10px 14px;margin-top:8px;border:1px solid #e5e1dc;border-radius:8px;background:#fff">
+    <div class="ct-txt" style="flex:1">
+      <b>${moi?"Session organisée par Laura Ballo Coaching":"Session portée par un autre organisme"}</b>
+      <span class="s">${moi?"Ses stagiaires comptent dans les indicateurs de r\u00e9sultats publi\u00e9s sur le site (IND 2).":"Exclue des indicateurs publi\u00e9s : l'organisme qui porte la session publie ses propres r\u00e9sultats."}</span>
+    </div>
+    <label class="ck" style="max-width:none;white-space:nowrap"><input type="checkbox" data-act="togOrganisateur" data-s="${s.id}" ${moi?"checked":""}> Compt\u00e9e dans mes indicateurs</label>
   </div>`;
 }
 
@@ -3195,7 +3216,7 @@ const ACT={
     const s={id:uid("s"),titre:draft.titre.trim()||`${f.nom} — ${C(draft.clientId).nom}`,formationId:draft.formationId,
       clientId:draft.clientId,formateurId:draft.formateurId,type:draft.type,code:draft.code,lieu:draft.lieu,
       financeurId:draft.financeurId||"",modalites:[...draft.modalites],statut:"Planifiée",convention:false,convocation:false,
-      envois:draft.envois,organismeConvocateur:draft.organismeConvocateur,
+      envois:draft.envois,organismeConvocateur:draft.organismeConvocateur,organisateur:draft.organisateur,
       rapport:{fait:false,deroule:"",forts:"",diff:"",axes:""},besoin:{contexte:"",objectifs:"",contraintes:""},
       creneaux:draft.creneaux.map(c=>({...c})),inscrits:[],emF:draft.creneaux.map(()=>false)};
     (async()=>{
@@ -3204,7 +3225,7 @@ const ACT={
           titre:s.titre,code:s.code,type:s.type,modalite:draft.modalites[0]||"Présentiel",
           lieu:s.lieu,adresse:"",formationId:s.formationId,clientId:s.clientId,
           formateurId:s.formateurId,financeurId:s.financeurId,
-          envois:s.envois,organismeConvocateur:s.organismeConvocateur,creneaux:s.creneaux}});
+          envois:s.envois,organismeConvocateur:s.organismeConvocateur,organisateur:s.organisateur,creneaux:s.creneaux}});
         s.id=r.id; db.sessions.unshift(s); toast("Session créée dans Notion");
         go("session-detail",s.id);
       }catch(e){ toast("⚠ Non créée : "+e.message); }
@@ -3381,6 +3402,10 @@ const ACT={
     i.attestation=!i.attestation;render();
     if(i.id) pousser("inscriptions",{action:"maj",id:i.id,champs:{attestation:i.attestation}},
       i.attestation?"Attestation marquée remise":"Attestation retirée").catch(()=>{});},
+  togOrganisateur:b=>{const s=SE(b.dataset.s);
+    s.organisateur=b.checked?"Laura Ballo Coaching":"Autre organisme";
+    pousser("sessions",{action:"maj",id:s.id,champs:{organisateur:s.organisateur}},
+      b.checked?"Session compt\u00e9e dans les indicateurs publi\u00e9s":"Session exclue des indicateurs publi\u00e9s").then(()=>render()).catch(()=>{});},
   modeEnvois:b=>{const s=SE(b.dataset.s);
     if(s.envois===b.dataset.v)return;
     s.envois=b.dataset.v;
