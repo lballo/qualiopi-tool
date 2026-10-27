@@ -563,6 +563,7 @@ const fmtDShort=iso=>iso?new Date(iso+"T12:00:00").toLocaleDateString("fr-FR",{d
 const mn=t=>{const[h,m]=(t||"0:0").split(":").map(Number);return h*60+m;};
 const durH=c=>Math.max(0,mn(c.f)-mn(c.d))/60;
 const nbH=n=>{const v=Math.round(n*10)/10;return String(v).replace(".",",")+" h";};
+const nbJ=n=>String(n).replace(".",",")+(n>1?" jours":" jour");
 const initials=a=>((a.prenom?.[0]||"")+(a.nom?.[0]||"")).toUpperCase()||a.nom.slice(0,2).toUpperCase();
 const fullName=a=>[a.nom,a.prenom].filter(Boolean).join(" ");
 const F=id=>db.formations.find(x=>x.id===id);
@@ -813,18 +814,29 @@ function vSessions(){
 
 /* ─── Nouvelle session ─── */
 const STD=[["Matin","09:00","12:30"],["Après-midi","13:30","17:00"],["Soirée","18:00","20:00"]];
+/* Planning par défaut d'une nouvelle session : la durée vient du catalogue
+   (Durée (jours), à défaut Durée (heures) / 7), répartie en matin + après-midi
+   sur des jours ouvrés consécutifs à partir de la date de démarrage. */
+const joursFormation=f=>{const j=+f?.jours||0;if(j>0)return j;const h=+f?.duree||7;return Math.max(.5,Math.round(h/3.5)/2);};
+const joursOuvres=(debut,n)=>{const out=[];const d=new Date(debut+"T12:00:00Z");
+  while(out.length<n){const w=d.getUTCDay();if(w!==0&&w!==6)out.push(d.toISOString().slice(0,10));d.setUTCDate(d.getUTCDate()+1);}
+  return out;};
+const jourOuvreSuivant=date=>{const d=new Date(date+"T12:00:00Z");d.setUTCDate(d.getUTCDate()+1);return joursOuvres(d.toISOString().slice(0,10),1)[0];};
+const genererPlanning=(debut,jours)=>{const demi=Math.max(1,Math.round((+jours||1)*2));const days=joursOuvres(debut,Math.ceil(demi/2));
+  return days.flatMap((day,i)=>STD.slice(0,i===days.length-1&&demi%2?1:2).map(([t,a,b])=>({date:day,type:t,d:a,f:b})));};
 function vNewSession(){
-  if(!draft) draft={formationId:db.formations[0].id,clientId:db.clients[0].id,formateurId:db.formateurs[0].id,
+  if(!draft){const f0=db.formations[0],debut=joursOuvres(dateProchaine(),1)[0],nbJours=joursFormation(f0);
+    draft={formationId:f0.id,clientId:db.clients[0].id,formateurId:db.formateurs[0].id,
     type:"INTRA",code:String(db.sessions.length+1),lieu:"",titre:"",financeurId:"",modalites:["Présentiel"],
     envois:"Manuel",organismeConvocateur:"",organisateur:"Laura Ballo Coaching",
-    creneaux:(j=>[{date:j,type:"Matin",d:"09:00",f:"12:30"},{date:j,type:"Après-midi",d:"13:30",f:"17:00"}])(dateProchaine())};
+    debut,nbJours,creneaux:genererPlanning(debut,nbJours)};}
   return head(I.sessionNew,"Nouvelle session","Créez une session de formation et son planning",
     `<button class="btn sec" data-go="sessions">← Retour</button>`)+
   `<div class="card"><div class="ct">Informations de la session</div>
    <div class="cd" style="margin-bottom:16px">La formation choisie apporte son programme, ses supports et son questionnaire.</div>
    <div class="fld"><label>Formation <span class="ind">IND 1</span></label>
-     <select data-d="formationId">${db.formations.map(f=>`<option value="${f.id}" ${draft.formationId===f.id?"selected":""}>${esc(f.nom)}</option>`).join("")}</select>
-     <div class="h">Durée catalogue : ${F(draft.formationId).duree} h — ajustable via les créneaux</div></div>
+     <select data-plan="formationId">${db.formations.map(f=>`<option value="${f.id}" ${draft.formationId===f.id?"selected":""}>${esc(f.nom)}</option>`).join("")}</select>
+     <div class="h">Durée catalogue : ${F(draft.formationId).duree} h, soit ${nbJ(joursFormation(F(draft.formationId)))} — le planning ci-dessous est généré en conséquence</div></div>
    <div class="fld"><label>Titre de la session</label><input type="text" data-d="titre" value="${esc(draft.titre)}" placeholder="Ex : ${esc(F(draft.formationId).nom)} — ${esc(C(draft.clientId).nom)}"></div>
    <div class="g2">
     <div class="fld"><label>Type de prestation</label><select data-d="type">${["INTRA","INTER","Individuel"].map(t=>`<option ${draft.type===t?"selected":""}>${t}</option>`).join("")}</select></div>
@@ -855,7 +867,13 @@ function vNewSession(){
   </div>
   <div class="card"><div class="chead"><div><div class="ct">Planning de la session <span class="ind">IND 9</span></div>
     <div class="cd">Durée totale : <b>${nbH(draft.creneaux.reduce((a,c)=>a+durH(c),0))}</b> · ${draft.creneaux.length} créneau${draft.creneaux.length>1?"x":""}</div></div>
-    <div class="sp"><button class="btn sec sm" data-act="slotAdd">+ Ajouter</button></div></div>
+    <div class="sp"><button class="btn sec sm" data-act="slotAddDay">+ Ajouter une journée</button>
+      <button class="btn sec sm" data-act="slotAdd">+ Ajouter un créneau</button></div></div>
+    <div class="g2" style="margin-bottom:12px">
+      <div class="fld"><label>Date de démarrage</label><input type="date" data-plan="debut" value="${draft.debut||""}"></div>
+      <div class="fld"><label>Nombre de jours</label><input type="number" min="0.5" step="0.5" data-plan="nbJours" value="${draft.nbJours}">
+        <div class="h">Pré-rempli d'après le catalogue. Jours ouvrés consécutifs (samedi et dimanche sautés) ; dates et horaires restent modifiables ligne par ligne.</div></div>
+    </div>
     <div class="slot-h"><span>Date</span><span>Type</span><span>Début</span><span>Fin</span><span>Durée</span><span></span></div>
     ${draft.creneaux.map((c,i)=>`<div class="slot">
       <input type="date" value="${c.date}" data-slot="${i}" data-k="date">
@@ -865,13 +883,18 @@ function vNewSession(){
       <span class="du">${nbH(durH(c))}</span>
       <button class="rm" data-act="slotDel" data-i="${i}" aria-label="Supprimer">✕</button></div>`).join("")}
     <div class="tools"><button data-act="slotApply">⧉ Appliquer les horaires standards</button>
-      <button data-act="slotGen2">⊞ Générer 2 jours consécutifs</button></div>
+      <button data-act="slotRegen">⊞ Régénérer le planning</button></div>
   </div>
   <div class="acts"><button class="btn sec" data-go="sessions">Annuler</button>
     <button class="btn pri" data-act="sessionCreate">Créer la session</button></div>`;
 }
 afterRender["new-session"]=()=>{
   $$("[data-d]").forEach(el=>el.onchange=()=>{draft[el.dataset.d]=el.value;render();});
+  $$("[data-plan]").forEach(el=>el.onchange=()=>{const k=el.dataset.plan;
+    if(k==="formationId"){draft.formationId=el.value;draft.nbJours=joursFormation(F(el.value));}
+    else if(k==="nbJours"){const v=Math.round((+el.value||0)*2)/2;if(v<.5){render();return;}draft.nbJours=v;}
+    else{if(!el.value){render();return;}draft.debut=el.value;}
+    draft.creneaux=genererPlanning(draft.debut||joursOuvres(dateProchaine(),1)[0],draft.nbJours);render();});
   $$("[data-dck]").forEach(el=>el.onchange=()=>{
     draft[el.dataset.dck]=el.checked?"Automatique":"Manuel";
     if(el.checked) draft.organismeConvocateur=""; render();});
@@ -3205,6 +3228,11 @@ const ACT={
   slotAdd:()=>{const l=draft.creneaux[draft.creneaux.length-1]||{date:dateProchaine(),type:"Matin"};
     const nx=l.type==="Matin"?STD[1]:STD[0];
     draft.creneaux.push({date:l.date,type:nx[0],d:nx[1],f:nx[2]});render();},
+  slotAddDay:()=>{const l=draft.creneaux[draft.creneaux.length-1];
+    const day=l?jourOuvreSuivant(l.date):(draft.debut||joursOuvres(dateProchaine(),1)[0]);
+    draft.creneaux.push(...STD.slice(0,2).map(([t,a,b])=>({date:day,type:t,d:a,f:b})));render();toast("Journée ajoutée");},
+  slotRegen:()=>{draft.creneaux=genererPlanning(draft.debut||joursOuvres(dateProchaine(),1)[0],draft.nbJours||1);render();
+    toast("Planning régénéré");},
   slotDel:b=>{draft.creneaux.splice(+b.dataset.i,1);render();},
   slotApply:()=>{draft.creneaux=draft.creneaux.map(c=>{const s=STD.find(x=>x[0]===c.type);return s?{...c,d:s[1],f:s[2]}:c;});render();toast("Horaires standards appliqués");},
   slotGen2:()=>{const j1=draft.creneaux[0]?.date||dateProchaine();const d=new Date(j1+"T12:00:00Z");d.setUTCDate(d.getUTCDate()+1);
