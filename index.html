@@ -569,6 +569,10 @@ const fullName=a=>[a.nom,a.prenom].filter(Boolean).join(" ");
 const F=id=>db.formations.find(x=>x.id===id);
 const C=id=>db.clients.find(x=>x.id===id);
 const T=id=>db.formateurs.find(x=>x.id===id);
+/* Seules les personnes dont « Domaines d intervention » contient « Formation »
+   peuvent animer une session ou être déclarées formatrices qualifiées. */
+const estFormateur=t=>(t.domaines||[]).includes("Formation");
+const formateursSessions=()=>db.formateurs.filter(estFormateur);
 const A=id=>db.apprenants.find(x=>x.id===id);
 const SE=id=>db.sessions.find(x=>x.id===id);
 const sessDates=s=>{const ds=[...new Set(s.creneaux.map(c=>c.date))].sort();return ds;};
@@ -826,7 +830,7 @@ const genererPlanning=(debut,jours)=>{const demi=Math.max(1,Math.round((+jours||
   return days.flatMap((day,i)=>STD.slice(0,i===days.length-1&&demi%2?1:2).map(([t,a,b])=>({date:day,type:t,d:a,f:b})));};
 function vNewSession(){
   if(!draft){const f0=db.formations[0],debut=joursOuvres(dateProchaine(),1)[0],nbJours=joursFormation(f0);
-    draft={formationId:f0.id,clientId:db.clients[0].id,formateurId:db.formateurs[0].id,
+    draft={formationId:f0.id,clientId:db.clients[0].id,formateurId:(formateursSessions()[0]||{}).id||"",
     type:"INTRA",code:String(db.sessions.length+1),lieu:"",titre:"",financeurId:"",modalites:["Présentiel"],
     envois:"Manuel",organismeConvocateur:"",organisateur:"Laura Ballo Coaching",
     debut,nbJours,creneaux:genererPlanning(debut,nbJours)};}
@@ -841,7 +845,8 @@ function vNewSession(){
    <div class="g2">
     <div class="fld"><label>Type de prestation</label><select data-d="type">${["INTRA","INTER","Individuel"].map(t=>`<option ${draft.type===t?"selected":""}>${t}</option>`).join("")}</select></div>
     <div class="fld"><label>Intervenant principal <span class="ind">IND 21</span></label>
-      <select data-d="formateurId">${db.formateurs.map(t=>`<option value="${t.id}" ${draft.formateurId===t.id?"selected":""}>${esc(t.nom)}</option>`).join("")}</select>
+      <select data-d="formateurId">${formateursSessions().map(t=>`<option value="${t.id}" ${draft.formateurId===t.id?"selected":""}>${esc(t.nom)}</option>`).join("")}</select>
+      ${formateursSessions().length?"":`<div class="h" style="color:#A83932">Aucun formateur : cochez « Formation » dans les domaines d'intervention d'un collaborateur.</div>`}
       <div class="h">Il émargera également à chaque demi-journée</div></div>
     <div class="fld"><label>Client / donneur d'ordre</label>
       <select data-d="clientId">${db.clients.map(c=>`<option value="${c.id}" ${draft.clientId===c.id?"selected":""}>${esc(c.nom)}</option>`).join("")}</select></div>
@@ -1989,7 +1994,7 @@ function fFormateurs(f){
   return `<div class="card"><div class="chead"><div><div class="ct">Intervenants qualifiés <span class="ind">IND 21</span></div>
     <div class="cd">Sélectionnez les formateurs qualifiés pour concevoir et/ou animer cette formation.</div></div>
     <div class="sp"><button class="btn sec sm" data-go="formateurs">Gérer les formateurs</button></div></div>
-    ${db.formateurs.map(t=>`<label class="ck" style="margin-bottom:8px">
+    ${db.formateurs.filter(t=>estFormateur(t)||(f.formateurs||[]).includes(t.id)).map(t=>`<label class="ck" style="margin-bottom:8px">
       <input type="checkbox" data-act="togFormateurQ" data-t="${t.id}" ${(f.formateurs||[]).includes(t.id)?"checked":""}>
       <span class="av" style="width:26px;height:26px;font-size:10px">${initials({nom:t.nom,prenom:""})}</span>
       <span><b>${esc(t.nom)}</b> <span class="s" style="display:inline">${esc(t.fonction)}</span></span></label>`).join("")}
@@ -3240,6 +3245,7 @@ const ACT={
 
   sessionCreate:()=>{
     if(!draft.creneaux.length){toast("Ajoutez au moins un créneau");return;}
+    if(!estFormateur(T(draft.formateurId)||{})){toast("Choisissez un intervenant dont le domaine d'intervention inclut « Formation »");return;}
     const f=F(draft.formationId);
     const s={id:uid("s"),titre:draft.titre.trim()||`${f.nom} — ${C(draft.clientId).nom}`,formationId:draft.formationId,
       clientId:draft.clientId,formateurId:draft.formateurId,type:draft.type,code:draft.code,lieu:draft.lieu,
