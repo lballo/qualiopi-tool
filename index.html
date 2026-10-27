@@ -105,6 +105,9 @@ button.tag:hover{filter:brightness(.96)}
 .todo .go{margin-left:auto;color:var(--muted);font-size:12.5px;white-space:nowrap}
 .todo:hover .go{color:var(--green-d)}
 .todo.click{cursor:pointer}
+a.todo{color:inherit;text-decoration:none}
+td a[target="_blank"]{color:inherit;text-decoration:none;border-bottom:1px solid var(--line)}
+td a[target="_blank"]:hover{color:var(--green-d);border-color:var(--green-d)}
 
 .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:16px}
 .kpi{background:var(--white);border:1px solid var(--line);border-radius:var(--r-lg);padding:15px 17px}
@@ -310,6 +313,7 @@ padding:11px 18px;border-radius:10px;font-size:13.5px;font-weight:500;opacity:0;
   .tw{overflow:visible}
   .view{animation:none}
   a[href^="http"]:after{content:" (" attr(href) ")";font-size:8.5pt;color:#555;word-break:break-all}
+  a.todo:after,td a[href*="notion.com"]:after{content:none}
 }
 
 @media(max-width:940px){
@@ -509,6 +513,9 @@ async function charger(){
   db.apprenants=d.apprenants;
   db.modeles=d.modeles||[]; db.veilles=d.veilles||[]; db.ameliorations=d.ameliorations||[]; db.abandons=d.abandons||[];
   db.risques=d.risques||[]; db.signalements=d.signalements||[]; db.indicateurs=d.indicateurs||[];
+  /* null = base Notion illisible : la conformité retombe sur les contrôles du panel */
+  db.referentiel=Array.isArray(d.referentiel)?d.referentiel:null;
+  db.dispositifs=Array.isArray(d.dispositifs)?d.dispositifs:null;
   if(d.org) db.org={...db.org,...d.org,docs:{...db.org.docs,...(d.org.docs||{})},autres:d.org.autres||[]};
   db.sessions=d.sessions.map(s=>({...s,
     besoin:s.besoin||{contexte:"",objectifs:"",contraintes:""},
@@ -622,8 +629,14 @@ function convocationDue(s){
   const jours=(new Date(s.dateDebut)-new Date(new Date().toDateString()))/86400000;
   return jours<=delai;
 }
-/* ═══════════════ CONFORMITÉ (calculée) ═══════════════ */
-function conformite(){
+/* ═══════════════ CONFORMITÉ ═══════════════
+   Source de vérité : les bases Notion 📐 Référentiel qualité (une ligne par
+   indicateur, avec son niveau de conformité et l'écart pressenti) et
+   🧰 Dispositifs qualité (ce qui produit les preuves). Les contrôles du panel
+   ci-dessous restent affichés à côté : ils vérifient les données saisies ici
+   (programmes, émargements, convocations…) sans entrer dans le pourcentage.
+   Si le Référentiel est illisible, ils redeviennent la base du score. */
+function controlesPanel(){
   const pts=[];
   /* `cat` rattache explicitement chaque point à une jauge. L'ancien regroupement
      déduisait la catégorie du libellé d'indicateur : « IND 30-32 » ne contenant
@@ -653,13 +666,60 @@ function conformite(){
   return {pts, ok, total:pts.length, pct:Math.round(ok/pts.length*100)};
 }
 const CATEGORIES_CONF=["Catalogue","Sessions","Veille","Équipe","Amélioration"];
-/* Les jauges couvrent l'intégralité des points : leur somme égale le total affiché. */
+const CRITERES_COURTS={"C1 Information du public":"C1 Information","C2 Objectifs et adaptation":"C2 Objectifs",
+  "C3 Accompagnement":"C3 Accompagnement","C4 Moyens":"C4 Moyens","C5 Qualification des personnels":"C5 Personnels",
+  "C6 Environnement professionnel":"C6 Environnement","C7 Amélioration continue":"C7 Amélioration"};
+const ECARTS_SANS_RISQUE=["","Aucun écart","Non applicable"];
+const nomIndicateur=r=>(r.indicateur||"").replace(/^Ind\.\s*\d+\s*[—-]\s*/,"");
+function conformite(){
+  const ref=db.referentiel;
+  if(!ref||!ref.length) return {...controlesPanel(),source:"panel"};
+  const applicables=ref.filter(r=>r.applicable!=="Non applicable");
+  const pts=applicables.map(r=>({lbl:nomIndicateur(r),ok:r.niveau==="Conforme",ind:"IND "+(r.num??"?"),
+    cat:CRITERES_COURTS[r.critere]||r.critere||"Autres",href:r.url,ref:r}));
+  const ok=pts.filter(p=>p.ok).length;
+  return {pts,ok,total:pts.length,pct:pts.length?Math.round(ok/pts.length*100):0,source:"notion",
+    nonApplicables:ref.filter(r=>r.applicable==="Non applicable"),
+    /* Conforme mais avec un écart pressenti (vigilance, risque de NC) : à regarder avant l'audit */
+    ecarts:applicables.filter(r=>!ECARTS_SANS_RISQUE.includes(r.ecart||"")),
+    dispositifs:(db.dispositifs||[]).filter(d=>d.statut!=="Obsolète"&&((d.ecart&&d.ecart!=="Aucun")||d.statut!=="En place"))};
+}
+/* Les jauges couvrent l'intégralité des points : leur somme égale le total affiché.
+   Source Notion : une jauge par critère du RNQ (C1 à C7). */
 const groupes=()=>{
-  const c=conformite().pts;
-  return CATEGORIES_CONF.map(cat=>{
-    const g=c.filter(p=>p.cat===cat);
+  const c=conformite();
+  const cats=c.source==="notion"?[...new Set(c.pts.map(p=>p.cat))]:CATEGORIES_CONF;
+  return cats.map(cat=>{
+    const g=c.pts.filter(p=>p.cat===cat);
     return [cat,{ok:g.filter(p=>p.ok).length,t:g.length}];
   }).filter(([,g])=>g.t);
+};
+const TAG_NIVEAU={"Conforme":"ok","Partiel":"warn","Non conforme":"bad","À réévaluer":"vio","Non applicable":"neutral"};
+const TAG_ECART={"Aucun écart":"ok","Point de vigilance":"warn","NC mineure":"warn","Risque NC majeure":"bad","NC majeure":"bad","Non applicable":"neutral"};
+const TAG_STATUT_DISPO={"En place":"ok","Partiel":"warn","À créer":"bad","À revérifier":"vio","Obsolète":"neutral"};
+const TAG_ECART_DISPO={"Aucun":"ok","Point d'amélioration":"info","NC mineure":"warn","NC majeure":"bad"};
+const tagSi=(map,v)=>v?`<span class="tag ${map[v]||"neutral"}">${esc(v)}</span>`:"";
+const lienNotion=u=>/^https:\/\//.test(u||"")?u:"";
+/* Texte Notion affiché en extrait : sans balises résiduelles, coupé proprement */
+const extrait=(t,n)=>{const x=String(t||"").replace(/<br\s*\/?>/gi," ").replace(/\s+/g," ").trim();return x.length>n?x.slice(0,n-3)+"…":x;};
+/* Ce qui reste à traiter : indicateurs non conformes ou avec un écart pressenti,
+   puis contrôles du panel en échec. Chaque élément ouvre sa fiche (Notion ou panel). */
+function aCompleter(){
+  const c=conformite();
+  if(c.source!=="notion") return c.pts.filter(p=>!p.ok);
+  const vus=new Set();
+  const items=[];
+  c.pts.filter(p=>!p.ok).forEach(p=>{vus.add(p.ref.id);items.push({...p,tag:tagSi(TAG_NIVEAU,p.ref.niveau||"À renseigner")});});
+  c.ecarts.filter(r=>!vus.has(r.id)).forEach(r=>items.push({lbl:nomIndicateur(r),ok:false,ind:"IND "+r.num,href:r.url,tag:tagSi(TAG_ECART,r.ecart)}));
+  controlesPanel().pts.filter(p=>!p.ok).forEach(p=>items.push({...p,tag:`<span class="tag neutral">Panel</span>`}));
+  return items;
+}
+const todoPt=p=>{
+  const h=lienNotion(p.href);
+  const corps=`<span class="d ${p.ok?"ok":""}"></span> ${esc(p.lbl)} <span class="ind">${esc(p.ind)}</span>${p.tag?" "+p.tag:""}`;
+  if(h) return `<a class="todo click" href="${esc(h)}" target="_blank" rel="noopener">${corps}<span class="go">Ouvrir dans Notion ›</span></a>`;
+  if(p.view && !p.ok) return `<div class="todo click" data-go="${p.view}">${corps}<span class="go">Ouvrir ›</span></div>`;
+  return `<div class="todo">${corps}</div>`;
 };
 
 /* ═══════════════ MENU ═══════════════ */
@@ -683,7 +743,7 @@ const MENU=[
 ];
 const counts={sessions:()=>db.sessions.length,formations:()=>db.formations.length,apprenants:()=>db.apprenants.length,
   formateurs:()=>db.formateurs.length,clients:()=>db.clients.length,financeurs:()=>db.financeurs.length,
-  veille:()=>db.veilles.length,modeles:()=>db.modeles.length,conf:()=>conformite().total-conformite().ok};
+  veille:()=>db.veilles.length,modeles:()=>db.modeles.length,conf:()=>aCompleter().length};
 function renderMenu(){
   $("#side").innerHTML=`<div class="logo">${I.logo} Laura ballo</div>`+
   MENU.map(g=>(g.sec?`<div class="navsec">${g.sec}</div>`:"")+g.items.map(([id,lbl,ic,cls])=>{
@@ -769,11 +829,11 @@ function vDash(){
   const heures=db.sessions.reduce((a,s)=>a+sessHeures(s),0);
   const apprenantsFormes=new Set(db.sessions.flatMap(s=>s.inscrits.map(i=>i.aId))).size;
   const notes=db.sessions.flatMap(s=>s.inscrits.filter(i=>i.sat)).length;
-  const aFaire=c.pts.filter(p=>!p.ok);
+  const aFaire=aCompleter();
   return head(I.dash,"Tableau de bord",`${dateLongue()} — vue d'ensemble de votre activité`,
     `<button class="btn sec" data-go="import">Importer des apprenants</button>
      <button class="btn pri" data-go="new-session">+ Nouvelle session</button>`)+
-  `<div class="conf"><div class="t">Conformité Qualiopi : ${c.pct} %</div><div class="gauges">
+  `<div class="conf"><div class="t">Conformité Qualiopi : ${c.pct} %${c.source==="notion"?` — ${c.ok} / ${c.total} indicateurs applicables conformes`:""}</div><div class="gauges">
     ${groupes().map(([lbl,g])=>`<div class="g ${g.ok===g.t?"done":""}"><div class="l"><span>${lbl}</span><b>${g.ok}/${g.t}</b></div>
       <div class="bar"><i class="${g.ok===g.t?"full":""}" style="width:${g.t?(g.ok/g.t*100):0}%"></i></div></div>`).join("")}
   </div></div>
@@ -784,8 +844,8 @@ function vDash(){
     <div class="kpi"><div class="v">${nbH(heures)}</div><div class="l">Heures planifiées</div></div>
   </div>
   <div class="card"><div class="chead"><div><div class="ct">À compléter pour votre conformité <span class="tag ${aFaire.length?"warn":"ok"}">${aFaire.length}</span></div>
-    <div class="cd">Cliquez sur un élément pour accéder à la section concernée.</div></div></div>
-    ${aFaire.length?aFaire.map(p=>`<div class="todo click" data-go="${p.view}"><span class="d"></span> ${p.lbl} <span class="ind">${p.ind}</span><span class="go">Ouvrir ›</span></div>`).join("")
+    <div class="cd">${c.source==="notion"?"Indicateurs non conformes ou avec un écart pressenti dans le Référentiel Notion, puis contrôles du panel en échec.":"Cliquez sur un élément pour accéder à la section concernée."}</div></div></div>
+    ${aFaire.length?aFaire.map(todoPt).join("")
       :`<div class="todo"><span class="d ok"></span> Tous les points sont couverts — bravo.</div>`}
   </div>
   <div class="card pad0"><div style="padding:18px 20px 0"><div class="ct">Sessions</div></div>
@@ -2736,16 +2796,57 @@ afterRender["financeur-detail"]=()=>{
 };
 function vConf(){
   const c=conformite();
-  return head(I.conf,"Conformité Qualiopi","Où vous en êtes, point par point")+
-  `<div class="conf"><div class="t">Conformité globale : ${c.pct} % — ${c.ok} / ${c.total} points couverts</div>
-    <div class="gauges">${groupes().map(([lbl,g])=>`<div class="g ${g.ok===g.t?"done":""}"><div class="l"><span>${lbl}</span><b>${g.ok}/${g.t}</b></div>
-      <div class="bar"><i class="${g.ok===g.t?"full":""}" style="width:${g.t?(g.ok/g.t*100):0}%"></i></div></div>`).join("")}</div></div>
-  <div class="card"><div class="ct">Points ouverts</div><div class="cd" style="margin-bottom:10px">Ce qu'un auditeur relèverait aujourd'hui.</div>
-    ${c.pts.filter(p=>!p.ok).map(p=>`<div class="todo click" data-go="${p.view}"><span class="d"></span> ${p.lbl} <span class="ind">${p.ind}</span><span class="go">Ouvrir ›</span></div>`).join("")||`<div class="todo"><span class="d ok"></span> Aucun point ouvert.</div>`}
+  const jauges=`<div class="gauges">${groupes().map(([lbl,g])=>`<div class="g ${g.ok===g.t?"done":""}"><div class="l"><span>${esc(lbl)}</span><b>${g.ok}/${g.t}</b></div>
+      <div class="bar"><i class="${g.ok===g.t?"full":""}" style="width:${g.t?(g.ok/g.t*100):0}%"></i></div></div>`).join("")}</div>`;
+  const panel=controlesPanel();
+  const cartePanel=(titre,desc)=>`<div class="card"><div class="ct">${titre} <span class="tag ${panel.ok===panel.total?"ok":"warn"}">${panel.ok} / ${panel.total}</span></div>
+    <div class="cd" style="margin-bottom:10px">${desc}</div>
+    ${panel.pts.map(todoPt).join("")}</div>`;
+  if(c.source!=="notion"){
+    return head(I.conf,"Conformité Qualiopi","Où vous en êtes, point par point")+
+    `<div class="alert" style="background:#FFFDF6;border-color:#FDE68A"><div class="at" style="color:#92400E">⚠ Référentiel Notion indisponible</div>
+      <ul><li style="color:#92400E">La base 📐 Référentiel qualité n'a pas pu être lue (accès de l'intégration Notion ou base déplacée). Le score ci-dessous repose sur les seuls contrôles du panel.</li></ul></div>
+    <div class="conf"><div class="t">Conformité globale : ${c.pct} % — ${c.ok} / ${c.total} points couverts</div>${jauges}</div>`+
+    cartePanel("Contrôles du panel","Ce qu'un auditeur relèverait aujourd'hui dans les données saisies ici.");
+  }
+  const ref=db.referentiel, dispos=db.dispositifs||[];
+  const nomDispo=id=>dispos.find(d=>d.id===id)?.nom;
+  const verif=ref.map(r=>r.verification).filter(Boolean).sort().pop();
+  const aTraiter=aCompleter().filter(p=>p.href);
+  const ligneInd=r=>{
+    const na=r.applicable==="Non applicable", h=lienNotion(r.url);
+    const ds=(r.dispositifs||[]).map(nomDispo).filter(Boolean);
+    const detail=na?r.justification:r.synthese;
+    return `<tr${na?' style="opacity:.62"':""}><td class="s" style="white-space:nowrap">${r.num??""}</td>
+      <td><b>${h?`<a href="${esc(h)}" target="_blank" rel="noopener">${esc(nomIndicateur(r))}</a>`:esc(nomIndicateur(r))}</b>
+        ${detail?`<span class="s">${esc(extrait(detail,260))}</span>`:""}</td>
+      <td>${tagSi(TAG_NIVEAU,r.niveau)||`<span class="tag neutral">À renseigner</span>`}</td>
+      <td>${na?"":tagSi(TAG_ECART,r.ecart)}</td>
+      <td class="s">${ds.length?esc(ds.slice(0,3).join(" · "))+(ds.length>3?` +${ds.length-3}`:""):(na?"":"—")}</td></tr>`;
+  };
+  const parCritere=[...new Set(ref.map(r=>r.critere||"Autres"))];
+  return head(I.conf,"Conformité Qualiopi",`État tenu dans Notion — 📐 Référentiel qualité et 🧰 Dispositifs qualité${verif?` · dernière vérification le ${fmtDShort(verif)}`:""}`)+
+  `<div class="conf"><div class="t">Conformité globale : ${c.pct} % — ${c.ok} / ${c.total} indicateurs applicables conformes · ${c.nonApplicables.length} non applicables</div>${jauges}</div>
+  <div class="card"><div class="ct">À traiter avant l'audit <span class="tag ${aTraiter.length?"warn":"ok"}">${aTraiter.length}</span></div>
+    <div class="cd" style="margin-bottom:10px">Indicateurs non conformes, ou conformes avec un écart pressenti (vigilance, risque de non-conformité).</div>
+    ${aTraiter.length?aTraiter.map(todoPt).join(""):`<div class="todo"><span class="d ok"></span> Aucun indicateur non conforme ni écart pressenti.</div>`}
   </div>
-  <div class="card"><div class="ct">Points couverts</div>
-    ${c.pts.filter(p=>p.ok).map(p=>`<div class="todo"><span class="d ok"></span> ${p.lbl} <span class="ind">${p.ind}</span></div>`).join("")||`<div class="note">Rien pour l'instant.</div>`}
-  </div>`;
+  <div class="card pad0"><div style="padding:18px 20px 0"><div class="ct">Les ${ref.length} indicateurs du référentiel</div>
+    <div class="cd">Synthèse d'audit pour les indicateurs applicables, justification pour les autres. Chaque intitulé ouvre la fiche Notion.</div></div>
+    <div class="tw" tabindex="0"><table style="margin-top:14px"><thead><tr><th>N°</th><th>Indicateur</th><th>Conformité</th><th>Écart pressenti</th><th>Dispositifs</th></tr></thead><tbody>
+    ${parCritere.map(cr=>`<tr><td colspan="5" style="background:var(--line-2);font-weight:600;font-size:12.5px">${esc(cr)}</td></tr>`+
+      ref.filter(r=>(r.critere||"Autres")===cr).map(ligneInd).join("")).join("")}
+    </tbody></table></div></div>
+  <div class="card pad0"><div style="padding:18px 20px 0"><div class="ct">Dispositifs à renforcer <span class="tag ${c.dispositifs.length?"info":"ok"}">${c.dispositifs.length} / ${dispos.length}</span></div>
+    <div class="cd">Dispositifs qui ne sont pas « En place » sans écart. Ils n'entrent pas dans le pourcentage mais nourrissent les synthèses d'audit.</div></div>
+    ${c.dispositifs.length?`<div class="tw" tabindex="0"><table style="margin-top:14px"><thead><tr><th>Dispositif</th><th>Statut</th><th>Écart</th><th>Priorité</th></tr></thead><tbody>
+    ${c.dispositifs.sort((a,b)=>(a.priorite||"P9").localeCompare(b.priorite||"P9")||a.nom.localeCompare(b.nom)).map(d=>{const h=lienNotion(d.url);return `<tr>
+      <td><b>${h?`<a href="${esc(h)}" target="_blank" rel="noopener">${esc(d.nom)}</a>`:esc(d.nom)}</b>
+        ${d.action?`<span class="s">${esc(extrait(d.action,220))}</span>`:""}</td>
+      <td>${tagSi(TAG_STATUT_DISPO,d.statut)}</td><td>${tagSi(TAG_ECART_DISPO,d.ecart)}</td>
+      <td class="s" style="white-space:nowrap">${esc(d.priorite||"—")}</td></tr>`;}).join("")}
+    </tbody></table></div>`:`<div class="note" style="padding:12px 20px 18px">Tous les dispositifs sont en place, sans écart.</div>`}</div>`+
+  cartePanel("Contrôles automatiques du panel","Vérifiés à partir des données saisies ici (programmes, convocations, émargements, veille…). Ils complètent l'état Notion sans entrer dans le pourcentage.");
 }
 let tabO="identite";
 function vOrganisme(){

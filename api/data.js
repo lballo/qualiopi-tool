@@ -10,7 +10,7 @@ module.exports = handler(async (req, res) => {
     sessionsR, creneauxR, participantsR, apprenantsR,
     formationsR, entreprisesR, collabsR, financeursR,
     contactsR, documentsR, echangesR, veilleR, ameliorationsR, competencesR, organismeR, emargementsR, evaluationsR, abandonsR, modelesR,
-    risquesR, signalementsR, indicateursR,
+    risquesR, signalementsR, indicateursR, referentielR, dispositifsR,
   ] = await Promise.all([
     queryAll(DB.sessions),
     queryAll(DB.creneaux),
@@ -34,6 +34,10 @@ module.exports = handler(async (req, res) => {
     queryAll(DB.risques).catch(() => []),
     queryAll(DB.signalements).catch(() => []),
     queryAll(DB.indicateurs, { filter: { property: "Statut", select: { equals: "Actuel" } } }).catch(() => []),
+    /* null = base illisible (accès de l'intégration, base déplacée) : le panel
+       revient alors à ses contrôles internes et le signale, au lieu d'afficher 0 %. */
+    queryAll(DB.referentiel).catch(e => { console.error("[referentiel]", e.message); return null; }),
+    queryAll(DB.dispositifs).catch(e => { console.error("[dispositifs]", e.message); return null; }),
   ]);
 
   const id = p => p.id.replace(/-/g, "");
@@ -666,10 +670,57 @@ module.exports = handler(async (req, res) => {
     };
   });
 
+  /* ── Référentiel qualité (RNQ) : l'état de conformité tenu dans Notion ── */
+  const referentiel = referentielR && referentielR.map(p => {
+    const x = p.properties;
+    return {
+      id: id(p),
+      num: P.num(x, "N°"),
+      indicateur: P.title(x, "Indicateur"),
+      critere: P.select(x, "Critère"),
+      champ: P.select(x, "Champ d'application"),
+      applicable: P.select(x, "Applicable à LBC"),
+      niveau: P.select(x, "Niveau de conformité"),
+      ecart: P.select(x, "Écart pressenti"),
+      gradation: P.select(x, "Gradation (guide V9)"),
+      evolution: P.select(x, "Dernière évolution"),
+      exigence: P.text(x, "Exigence (résumé)"),
+      synthese: P.text(x, "Synthèse d'audit"),
+      justification: P.text(x, "Justification si non applicable"),
+      actions: P.text(x, "Actions avant audit"),
+      verification: P.date(x, "Dernière vérification"),
+      dispositifs: P.rel(x, "🧰 Dispositifs"),
+      url: p.url || "",
+    };
+  }).sort((a, b) => (a.num ?? 99) - (b.num ?? 99));
+
+  /* ── Dispositifs qualité : ce qui produit les preuves de chaque indicateur ── */
+  const dispositifs = dispositifsR && dispositifsR.map(p => {
+    const x = p.properties;
+    return {
+      id: id(p),
+      nom: P.title(x, "Dispositif"),
+      type: P.select(x, "Type"),
+      statut: P.select(x, "Statut"),
+      ecart: P.select(x, "Écart"),
+      priorite: P.select(x, "Priorité"),
+      automatisation: P.select(x, "Automatisation"),
+      constat: P.text(x, "Constat d'audit"),
+      action: P.text(x, "Action corrective"),
+      preuve: P.text(x, "Preuve produite"),
+      lien: P.url(x, "Lien"),
+      echeance: P.date(x, "Échéance"),
+      verification: P.date(x, "Dernière vérification"),
+      indicateurs: P.rel(x, "📐 Indicateurs couverts"),
+      url: p.url || "",
+    };
+  }).sort((a, b) => a.nom.localeCompare(b.nom));
+
   res.status(200).json({
     ok: true,
     charge: new Date().toISOString(),
     formations, clients, formateurs, financeurs, apprenants, sessions,
     veilles, ameliorations, org, abandons, modeles, risques, signalements, indicateurs,
+    referentiel, dispositifs,
   });
 });

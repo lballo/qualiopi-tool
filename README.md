@@ -96,6 +96,15 @@ uniquement. C'est volontaire — une signature saisie par l'organisme n'aurait a
 | 🚪 Abandons & ruptures | Ind. 12 |
 | 📝 Modèles de documents | Convocations, attestations, procédures |
 | 🏛️ Mon organisme | Identité, mentions légales, documents cadres |
+| 📐 Référentiel qualité (RNQ) | Score de conformité : une ligne par indicateur (niveau, écart pressenti, synthèse d'audit) — lecture seule |
+| 🧰 Dispositifs qualité | Dispositifs à renforcer affichés dans l'écran Conformité — lecture seule |
+
+**Score de conformité.** Le pourcentage et les jauges (C1 à C7) viennent du 📐 Référentiel :
+indicateurs applicables dont le niveau est « Conforme ». La liste « À traiter » reprend les
+indicateurs non conformes ou avec un écart pressenti. Les contrôles internes du panel
+(programmes, convocations, émargements, veille…) restent affichés à part, sans entrer dans le
+pourcentage. Si le Référentiel est illisible (accès de l'intégration), l'écran le signale et le
+score retombe sur ces seuls contrôles.
 
 La base **📮 Réclamations** a été fusionnée dans 🔄 Amélioration continue
 (type d'action « Réclamation ») et renommée « [ARCHIVÉ] ».

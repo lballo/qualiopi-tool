@@ -31,6 +31,9 @@ const DB = {
   signalements:   "f0fcc062d1e44856a00a91e728cd57c3",
   indicateurs:    "88a2c2bf0fbf47c5a286060f39faf861",
   partenairesHandicap: "0f794c8102bb45db91cfdee1c5b8a838",
+  /* Pilotage de la conformité : une ligne par indicateur du RNQ, une ligne par dispositif */
+  referentiel:    "ad897b9336e54de7a2f7af8e7ec426b3",
+  dispositifs:    "a9783d13fc564616b1ee19d649f6a1e2",
 };
 
 /* ── Appel générique ── */
